@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom"
-import LandingPage from "./pages/LandingPage"
+import LandingPage from "./pages/Landingpage"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import PatientDashboard from "./pages/PatientDashboard"

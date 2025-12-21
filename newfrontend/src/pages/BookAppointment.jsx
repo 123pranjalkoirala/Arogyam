@@ -1,38 +1,71 @@
-import Navbar from "../components/Navbar"
-import Footer from "../components/Footer"
-
-const doctors = [
-  { id: 1, name: "Dr. Sponge Raj", spec: "Cardiologist", img: "https://i.ibb.co/9hVw9HY/sponge-doctor-1.png" },
-  { id: 2, name: "Dr. Sponge Maya", spec: "Neurologist", img: "https://i.ibb.co/3hK6X7k/sponge-doctor-2.png" },
-  { id: 3, name: "Dr. Sponge Kiran", spec: "Pediatrician", img: "https://i.ibb.co/7QV5X9v/sponge-doctor-3.png" },
-  { id: 4, name: "Dr. Sponge Sita", spec: "Dermatologist", img: "https://i.ibb.co/4pY6Z8W/sponge-doctor-4.png" },
-]
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function BookAppointment() {
+  const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/doctors")
+      .then(res => res.json())
+      .then(data => setDoctors(data.doctors || []));
+  }, []);
+
+  const book = async () => {
+    if (!selectedDoctor || !date || !time)
+      return toast.error("Fill all fields");
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://localhost:5000/api/appointments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        doctorId: selectedDoctor,
+        date,
+        time,
+        reason
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      toast.success("Appointment booked!");
+    } else {
+      toast.error("Booking failed");
+    }
+  };
+
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-bg py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <h1 className="text-6xl font-bold text-center text-primary mb-16">Choose Your Doctor</h1>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
-            {doctors.map(doc => (
-              <div key={doc.id} className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-110 transition duration-300 cursor-pointer">
-                <img src={doc.img} alt={doc.name} className="w-full h-64 object-cover" />
-                <div className="p-8 text-center">
-                  <h3 className="text-2xl font-bold text-gray-800">{doc.name}</h3>
-                  <p className="text-xl text-primary mt-2">{doc.spec}</p>
-                  <button className="mt-6 bg-primary text-white px-10 py-4 rounded-full text-xl font-bold hover:bg-accent transition shadow-lg">
-                    Book Now
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen pt-28 bg-bg p-10">
+      <div className="max-w-xl mx-auto bg-white rounded-2xl shadow p-6">
+        <h2 className="text-3xl font-bold mb-6 text-primary">Book Appointment</h2>
+
+        <select
+          className="w-full p-3 border rounded mb-4"
+          onChange={e => setSelectedDoctor(e.target.value)}
+        >
+          <option value="">Select Doctor</option>
+          {doctors.map(d => (
+            <option key={d._id} value={d._id}>{d.name}</option>
+          ))}
+        </select>
+
+        <input type="date" className="w-full p-3 border rounded mb-4" onChange={e => setDate(e.target.value)} />
+        <input type="time" className="w-full p-3 border rounded mb-4" onChange={e => setTime(e.target.value)} />
+        <textarea placeholder="Reason" className="w-full p-3 border rounded mb-4" onChange={e => setReason(e.target.value)} />
+
+        <button onClick={book} className="w-full bg-primary text-white py-3 rounded-lg font-bold">
+          Confirm Booking
+        </button>
       </div>
-      <Footer />
-    </>
-  )
+    </div>
+  );
 }

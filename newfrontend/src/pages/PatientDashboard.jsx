@@ -1,38 +1,41 @@
-// src/pages/PatientDashboard.jsx
-import { useNavigate } from "react-router-dom"
-import { QRCodeSVG } from "qrcode.react"
+import { useEffect, useState } from "react";
 
 export default function PatientDashboard() {
-  const navigate = useNavigate()
-  const patientName = "Pranjal Babu Koirala"
+  const [reports, setReports] = useState([]);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:5000/api/reports", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) setReports(data.reports);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg to-primary/10 pt-24">
-      <div className="max-w-7xl mx-auto px-8 py-12">
+    <div className="min-h-screen pt-28 bg-bg">
+      <div className="max-w-6xl mx-auto p-8">
+        <h1 className="text-4xl font-bold text-primary mb-6">My Medical Reports</h1>
 
-        {/* Welcome Section */}
-        <div className="bg-white rounded-3xl shadow-2xl p-12 mb-12 text-center border-4 border-primary">
-        
-          <h1 className="text-6xl font-bold text-primary mb-4">Welcome Back aru kam bistarai hai,</h1>
-          <h2 className="text-5xl font-black text-gray-800">{patientName}</h2>
-          <p className="text-2xl text-gray-600 mt-4">Patient • AROGYAM Healthcare System</p>
-        </div>
-        </div>
-
-        
-
-           
-            
- 
-
-        {/* Footer Credit */}
-        <div className="text-center mt-20 text-gray-600">
-          <p className="text-xl">Final Year Project by <strong>Pranjal Babu Koirala • 2407642</strong></p>
-          <p className="text-lg mt-2">Herald College Kathmandu • L6CG8</p>
+        <div className="bg-white rounded-xl shadow p-6">
+          {reports.map(r => (
+            <div key={r._id} className="flex justify-between py-3 border-b">
+              <span>{r.title}</span>
+              <a
+                href={`http://localhost:5000${r.fileUrl}`}
+                target="_blank"
+                className="text-primary font-bold"
+              >
+                Download
+              </a>
+            </div>
+          ))}
         </div>
       </div>
-  )
+    </div>
+  );
 }
-  
-     
-  
