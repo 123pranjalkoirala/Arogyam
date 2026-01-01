@@ -4,8 +4,11 @@ const reportSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Appointment" },
+
   title: String,
   fileUrl: String,
-}, { timestamps: true });
+
+  createdAt: { type: Date, default: Date.now }
+});
 
 export default mongoose.model("Report", reportSchema);

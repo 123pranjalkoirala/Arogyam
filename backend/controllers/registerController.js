@@ -7,11 +7,11 @@ export const register = async (req, res) => {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role)
-      return res.status(400).json({ message: "All fields required" });
+      return res.status(400).json({ success: false, message: "All fields required" });
 
     const exists = await User.findOne({ email });
     if (exists)
-      return res.status(400).json({ message: "Email already registered" });
+      return res.status(400).json({ success: false, message: "Email already registered" });
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -29,12 +29,14 @@ export const register = async (req, res) => {
     );
 
     res.json({
+      success: true,
       message: "Registration successful",
       token,
       role: user.role,
+      name: user.name,
     });
 
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

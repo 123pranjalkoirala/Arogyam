@@ -1,41 +1,40 @@
 import express from "express";
-import multer from "multer";
 import Report from "../models/report.js";
 import { requireAuth } from "../middleware/auth.js";
+import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
-});
+/* ======================
+   DOCTOR UPLOAD REPORT
+====================== */
+router.post("/", requireAuth, upload.single("file"), async (req, res) => {
+  if (req.user.role !== "doctor")
+    return res.status(403).json({ success: false });
 
-const upload = multer({ storage });
+  const { patientId, title, appointmentId } = req.body;
 
-// Doctor uploads report
-router.post("/upload", requireAuth, upload.single("report"), async (req, res) => {
-  try {
-    const { patientId, appointmentId, title } = req.body;
-
-    const report = await Report.create({
-      patientId,
-      doctorId: req.user.id,
-      appointmentId,
-      title,
-      fileUrl: `/uploads/${req.file.filename}`
-    });
-
-    res.json({ success: true, report });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-// Patient & Doctor view reports
-router.get("/", requireAuth, async (req, res) => {
-  const reports = await Report.find({
-    $or: [{ patientId: req.user.id }, { doctorId: req.user.id }]
+  const report = await Report.create({
+    patientId,
+    doctorId: req.user.id,
+    appointmentId,
+    title,
+    fileUrl: `/uploads/${req.file.filename}`
   });
+
+  res.json({ success: true, report });
+});
+
+/* ======================
+   PATIENT VIEW REPORTS
+====================== */
+router.get("/", requireAuth, async (req, res) => {
+  if (req.user.role !== "patient")
+    return res.status(403).json({ success: false });
+
+  const reports = await Report.find({ patientId: req.user.id })
+    .populate("doctorId", "name");
+
   res.json({ success: true, reports });
 });
 

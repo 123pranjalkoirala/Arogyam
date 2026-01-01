@@ -3,7 +3,8 @@ import User from "../models/user.js";
 
 export const listDoctors = async (req, res) => {
   try {
-    const doctors = await User.find({ role: "doctor" }).select("name email picture");
+    const doctors = await User.find({ role: "doctor" })
+      .select("name email picture specialization experience qualification consultationFee bio");
     return res.json({ success: true, doctors });
   } catch (err) {
     console.error(err);
