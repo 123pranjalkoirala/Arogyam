@@ -41,8 +41,8 @@ export default function RegisterDoctor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.email || !form.password || !form.specialization) {
-      return toast.error("Please fill all required fields");
+    if (!form.name || !form.email || !form.password || !form.specialization || !form.qualification) {
+      return toast.error("Please fill all required fields including specialization and qualification");
     }
 
     if (form.password !== form.confirmPassword) {
@@ -250,7 +250,7 @@ export default function RegisterDoctor() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                     <Award className="w-4 h-4" />
-                    Qualification
+                    Qualification <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -258,6 +258,7 @@ export default function RegisterDoctor() {
                     onChange={(e) => setForm({ ...form, qualification: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
                     placeholder="e.g., MBBS, MD, MS"
+                    required
                   />
                 </div>
 
@@ -344,4 +345,7 @@ export default function RegisterDoctor() {
     </div>
   );
 }
+
+
+
 

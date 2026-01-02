@@ -21,7 +21,11 @@ import {
   Mail,
   Calendar as CalendarIcon,
   CreditCard,
-  Video
+  Video,
+  Star,
+  Upload,
+  Bell,
+  Stethoscope
 } from "lucide-react";
 
 export default function PatientDashboard() {
@@ -33,6 +37,11 @@ export default function PatientDashboard() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
+  const [doctors, setDoctors] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedAppointmentForRating, setSelectedAppointmentForRating] = useState(null);
+  const [ratingData, setRatingData] = useState({ rating: 5, review: "" });
   const [stats, setStats] = useState({
     total: 0,
     upcoming: 0,
@@ -46,6 +55,13 @@ export default function PatientDashboard() {
       return;
     }
     loadData();
+    
+    // Real-time notification polling every 10 seconds
+    const notificationInterval = setInterval(() => {
+      fetchAppointments();
+    }, 10000);
+    
+    return () => clearInterval(notificationInterval);
   }, []);
 
   useEffect(() => {
@@ -66,11 +82,23 @@ export default function PatientDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchProfile(), fetchAppointments()]);
+      await Promise.all([fetchProfile(), fetchAppointments(), fetchDoctors()]);
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/doctors");
+      const data = await res.json();
+      if (data.success) {
+        setDoctors(data.doctors || []);
+      }
+    } catch (err) {
+      console.error("Failed to load doctors");
     }
   };
 
@@ -104,9 +132,31 @@ export default function PatientDashboard() {
       const data = await res.json();
       if (data.success) {
         setAppointments(data.appointments || []);
+        // Check for new appointment confirmations
+        checkForNotifications(data.appointments || []);
       }
     } catch (err) {
       toast.error("Failed to load appointments");
+    }
+  };
+
+  const checkForNotifications = (apts) => {
+    const newNotifications = [];
+    apts.forEach(apt => {
+      if (apt.status === "approved" && apt.paymentStatus === "paid") {
+        newNotifications.push({
+          id: apt._id,
+          type: "appointment_confirmed",
+          message: `Your appointment with Dr. ${apt.doctorId?.name} on ${apt.date} at ${apt.time} has been confirmed!`,
+          appointment: apt
+        });
+      }
+    });
+    if (newNotifications.length > 0) {
+      setNotifications(newNotifications);
+      newNotifications.forEach(notif => {
+        toast.success(notif.message, { duration: 5000 });
+      });
     }
   };
 
@@ -131,6 +181,73 @@ export default function PatientDashboard() {
       }
     } catch (err) {
       toast.error("Failed to update profile");
+    }
+  };
+
+  const uploadProfilePicture = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("picture", file);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/me/upload-picture", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Profile picture updated successfully");
+        setProfile(data.user);
+        fetchProfile();
+      } else {
+        toast.error(data.message || "Failed to upload picture");
+      }
+    } catch (err) {
+      toast.error("Failed to upload picture");
+    }
+  };
+
+  const submitRating = async () => {
+    if (!selectedAppointmentForRating) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/api/ratings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          doctorId: selectedAppointmentForRating.doctorId._id,
+          appointmentId: selectedAppointmentForRating._id,
+          rating: ratingData.rating,
+          review: ratingData.review
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Thank you for your rating!");
+        setShowRatingModal(false);
+        setSelectedAppointmentForRating(null);
+        setRatingData({ rating: 5, review: "" });
+        fetchAppointments();
+      } else {
+        toast.error(data.message || "Failed to submit rating");
+      }
+    } catch (err) {
+      toast.error("Failed to submit rating");
     }
   };
 
@@ -309,6 +426,55 @@ export default function PatientDashboard() {
               {/* OVERVIEW TAB */}
               {activeTab === "overview" && (
                 <div className="space-y-6">
+                  {/* Available Doctors Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold text-gray-900">Available Doctors</h2>
+                      <button
+                        onClick={() => navigate("/doctors")}
+                        className="text-[#0F9D76] font-semibold hover:underline text-sm"
+                      >
+                        View All
+                      </button>
+                    </div>
+                    {doctors.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-500">No doctors available</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        {doctors.slice(0, 6).map(doctor => (
+                          <div
+                            key={doctor._id}
+                            onClick={() => navigate("/doctors")}
+                            className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={doctor.picture || `http://localhost:5000${doctor.picture}` || "https://via.placeholder.com/60"}
+                                alt={doctor.name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-[#0F9D76]/20"
+                                onError={(e) => e.target.src = "https://via.placeholder.com/60"}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 truncate">Dr. {doctor.name}</h3>
+                                <p className="text-sm text-[#0F9D76] font-medium truncate">{doctor.specialization || "General Physician"}</p>
+                                {doctor.averageRating > 0 && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-xs text-gray-600">{doctor.averageRating.toFixed(1)} ({doctor.totalRatings})</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upcoming Appointments */}
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Appointments</h2>
                     {upcomingAppointments.length === 0 ? (
@@ -443,7 +609,7 @@ export default function PatientDashboard() {
                       <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-3">Past Appointments</h3>
                         <div className="space-y-3">
-                          {pastAppointments.map(apt => (
+                                {pastAppointments.map(apt => (
                             <div key={apt._id} className="bg-gray-50 rounded-lg p-5 border border-gray-200">
                               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                 <div className="flex-1">
@@ -467,6 +633,18 @@ export default function PatientDashboard() {
                                     </span>
                                   </div>
                                 </div>
+                                {apt.status === "completed" && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedAppointmentForRating(apt);
+                                      setShowRatingModal(true);
+                                    }}
+                                    className="px-4 py-2 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0d8a66] transition-all flex items-center gap-2"
+                                  >
+                                    <Star className="w-4 h-4" />
+                                    Rate Doctor
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -592,12 +770,23 @@ export default function PatientDashboard() {
                     ) : (
                       <div className="space-y-4">
                         <div className="flex items-start gap-6">
-                          <img
-                            src={profile.picture || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80"}
-                            alt={profile.name}
-                            className="w-24 h-24 rounded-full object-cover border-4 border-[#0F9D76]/20"
-                            onError={(e) => e.target.src = "https://i.pravatar.cc/150?img=12"}
-                          />
+                          <div className="relative">
+                            <img
+                              src={profile.picture ? (profile.picture.startsWith("http") ? profile.picture : `http://localhost:5000${profile.picture}`) : "https://via.placeholder.com/150?text=No+Photo"}
+                              alt={profile.name}
+                              className="w-24 h-24 rounded-full object-cover border-4 border-[#0F9D76]/20"
+                              onError={(e) => e.target.src = "https://via.placeholder.com/150?text=No+Photo"}
+                            />
+                            <label className="absolute bottom-0 right-0 bg-[#0F9D76] text-white rounded-full p-2 cursor-pointer hover:bg-[#0d8a66] transition-all shadow-lg">
+                              <Upload className="w-4 h-4" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={uploadProfilePicture}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
                           <div className="flex-1">
                             <h3 className="text-2xl font-bold text-gray-900 mb-1">{profile.name}</h3>
                             <p className="text-gray-600 mb-4">{profile.email}</p>
@@ -653,6 +842,82 @@ export default function PatientDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && selectedAppointmentForRating && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Rate Your Doctor</h2>
+              <button
+                onClick={() => {
+                  setShowRatingModal(false);
+                  setSelectedAppointmentForRating(null);
+                  setRatingData({ rating: 5, review: "" });
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedAppointmentForRating.doctorId?.picture ? (selectedAppointmentForRating.doctorId.picture.startsWith("http") ? selectedAppointmentForRating.doctorId.picture : `http://localhost:5000${selectedAppointmentForRating.doctorId.picture}`) : "https://via.placeholder.com/60"}
+                  alt={selectedAppointmentForRating.doctorId?.name}
+                  className="w-16 h-16 rounded-full object-cover"
+                  onError={(e) => e.target.src = "https://via.placeholder.com/60"}
+                />
+                <div>
+                  <h3 className="font-bold text-lg">Dr. {selectedAppointmentForRating.doctorId?.name}</h3>
+                  <p className="text-[#0F9D76] text-sm">{selectedAppointmentForRating.doctorId?.specialization}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRatingData({ ...ratingData, rating: star })}
+                      className={`w-10 h-10 rounded-full transition-all ${
+                        star <= ratingData.rating
+                          ? "bg-yellow-400 text-white"
+                          : "bg-gray-200 text-gray-400"
+                      }`}
+                    >
+                      <Star className={`w-5 h-5 mx-auto ${star <= ratingData.rating ? "fill-current" : ""}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Review (Optional)</label>
+                <textarea
+                  value={ratingData.review}
+                  onChange={(e) => setRatingData({ ...ratingData, review: e.target.value })}
+                  rows={3}
+                  placeholder="Share your experience..."
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none resize-none"
+                />
+              </div>
+
+              <button
+                onClick={submitRating}
+                className="w-full py-3 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                Submit Rating
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

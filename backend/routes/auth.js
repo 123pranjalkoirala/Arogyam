@@ -3,6 +3,7 @@ import { login, googleLogin } from "../controllers/authController.js";
 import { register } from "../controllers/registerController.js";
 import { googleRegister } from "../controllers/googleRegisterController.js";
 import { requireAuth as auth } from "../middleware/auth.js";
+import { upload } from "../middleware/upload.js";
 import User from "../models/user.js";
 
 const router = express.Router();
@@ -63,6 +64,31 @@ router.put("/me", auth, async (req, res) => {
     return res.json({ success: true, user, message: "Profile updated successfully" });
   } catch (err) {
     console.error("Update profile error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Upload profile picture
+router.post("/me/upload-picture", auth, upload.single("picture"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const pictureUrl = `/uploads/${req.file.filename}`;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { picture: pictureUrl },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.json({ success: true, user, message: "Profile picture updated successfully" });
+  } catch (err) {
+    console.error("Upload picture error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });

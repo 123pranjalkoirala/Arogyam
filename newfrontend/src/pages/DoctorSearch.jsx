@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
-import { Search, Star, MapPin, Clock, Award, DollarSign, Filter } from "lucide-react";
+import { Search, Star, MapPin, Clock, Award, DollarSign, Filter, X, User, Mail, Phone, GraduationCap } from "lucide-react";
 
 const SPECIALIZATIONS = [
   "All Specializations",
@@ -14,7 +14,11 @@ const SPECIALIZATIONS = [
   "Pediatrician",
   "Orthopedic",
   "Neurologist",
-  "Psychiatrist"
+  "Psychiatrist",
+  "ENT Specialist",
+  "Ophthalmologist",
+  "Dentist",
+  "General Surgeon"
 ];
 
 export default function DoctorSearch() {
@@ -25,6 +29,8 @@ export default function DoctorSearch() {
   const [selectedSpecialization, setSelectedSpecialization] = useState("All Specializations");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showDoctorDetailModal, setShowDoctorDetailModal] = useState(false);
+  const [doctorRatings, setDoctorRatings] = useState(null);
   const [bookingData, setBookingData] = useState({
     date: "",
     time: "",
@@ -62,9 +68,25 @@ export default function DoctorSearch() {
     return matchesSearch && matchesSpecialization;
   });
 
+  const handleViewDoctor = async (doctor) => {
+    setSelectedDoctor(doctor);
+    setShowDoctorDetailModal(true);
+    // Fetch ratings for this doctor
+    try {
+      const res = await fetch(`http://localhost:5000/api/ratings/doctor/${doctor._id}`);
+      const data = await res.json();
+      if (data.success) {
+        setDoctorRatings(data);
+      }
+    } catch (err) {
+      console.error("Failed to load ratings");
+    }
+  };
+
   const handleBookClick = (doctor) => {
     setSelectedDoctor(doctor);
     setShowBookingModal(true);
+    setShowDoctorDetailModal(false);
     const today = new Date();
     today.setDate(today.getDate() + 1);
     setBookingData({
@@ -99,38 +121,8 @@ export default function DoctorSearch() {
       const paymentData = await paymentRes.json();
       
       if (paymentData.success) {
-        // Create appointment with pending payment first
-        const aptRes = await fetch("http://localhost:5000/api/appointments", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            doctorId: selectedDoctor._id,
-            date: bookingData.date,
-            time: bookingData.time,
-            reason: bookingData.reason,
-            paymentId: paymentData.paymentData.transaction_uuid,
-            amount: selectedDoctor.consultationFee || 500
-          })
-        });
-
-        // Create form and submit to eSewa
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = paymentData.eSewaUrl;
-
-        Object.keys(paymentData.paymentData).forEach(key => {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = paymentData.paymentData[key];
-          form.appendChild(input);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
+        // Redirect to mock payment page
+        window.location.href = paymentData.paymentUrl;
       } else {
         toast.error(paymentData.message || "Payment initiation failed");
       }
@@ -253,12 +245,20 @@ export default function DoctorSearch() {
                       </span>
                       <span className="text-sm text-gray-500">/consultation</span>
                     </div>
-                    <button
-                      onClick={() => handleBookClick(doctor)}
-                      className="px-6 py-2.5 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all duration-200 shadow-md hover:shadow-lg"
-                    >
-                      Book Now
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewDoctor(doctor)}
+                        className="px-4 py-2.5 bg-white text-[#0F9D76] border-2 border-[#0F9D76] rounded-lg font-semibold hover:bg-[#0F9D76]/5 transition-all duration-200"
+                      >
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => handleBookClick(doctor)}
+                        className="px-6 py-2.5 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all duration-200 shadow-md hover:shadow-lg"
+                      >
+                        Book Now
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -357,6 +357,138 @@ export default function DoctorSearch() {
                   Proceed to Payment (NPR {selectedDoctor.consultationFee || 500})
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Doctor Detail Modal */}
+      {showDoctorDetailModal && selectedDoctor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Doctor Details</h2>
+              <button
+                onClick={() => {
+                  setShowDoctorDetailModal(false);
+                  setSelectedDoctor(null);
+                  setDoctorRatings(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Doctor Header */}
+              <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
+                <img
+                  src={selectedDoctor.picture ? (selectedDoctor.picture.startsWith("http") ? selectedDoctor.picture : `http://localhost:5000${selectedDoctor.picture}`) : "https://via.placeholder.com/120"}
+                  alt={selectedDoctor.name}
+                  className="w-32 h-32 rounded-full object-cover border-4 border-[#0F9D76]/20"
+                  onError={(e) => e.target.src = "https://via.placeholder.com/120"}
+                />
+                <div className="flex-1">
+                  <h3 className="text-3xl font-bold text-gray-900 mb-2">Dr. {selectedDoctor.name}</h3>
+                  <p className="text-xl text-[#0F9D76] font-semibold mb-3">{selectedDoctor.specialization || "General Physician"}</p>
+                  {doctorRatings && doctorRatings.averageRating > 0 && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                      <span className="text-lg font-bold text-gray-900">{doctorRatings.averageRating.toFixed(1)}</span>
+                      <span className="text-sm text-gray-600">({doctorRatings.totalRatings} reviews)</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Award className="w-4 h-4" />
+                    <span>{selectedDoctor.experience || 0} years of experience</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Qualifications */}
+              {selectedDoctor.qualification && (
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-[#0F9D76]" />
+                    Qualifications
+                  </h4>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedDoctor.qualification}</p>
+                </div>
+              )}
+
+              {/* Bio */}
+              {selectedDoctor.bio && (
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3">About</h4>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg leading-relaxed">{selectedDoctor.bio}</p>
+                </div>
+              )}
+
+              {/* Contact Info */}
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-3">Contact Information</h4>
+                <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+                  {selectedDoctor.email && (
+                    <div className="flex items-center gap-3 text-gray-700">
+                      <Mail className="w-4 h-4 text-[#0F9D76]" />
+                      <span>{selectedDoctor.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Consultation Fee */}
+              <div className="bg-gradient-to-r from-[#0F9D76]/10 to-[#0d8a66]/10 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Consultation Fee</p>
+                    <p className="text-2xl font-bold text-gray-900">NPR {selectedDoctor.consultationFee || 500}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowDoctorDetailModal(false);
+                      handleBookClick(selectedDoctor);
+                    }}
+                    className="px-6 py-3 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all shadow-md hover:shadow-lg"
+                  >
+                    Book Appointment
+                  </button>
+                </div>
+              </div>
+
+              {/* Reviews */}
+              {doctorRatings && doctorRatings.ratings && doctorRatings.ratings.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3">Patient Reviews</h4>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {doctorRatings.ratings.slice(0, 5).map((rating) => (
+                      <div key={rating._id} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= rating.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            {rating.patientId?.name || "Anonymous"}
+                          </span>
+                        </div>
+                        {rating.review && (
+                          <p className="text-sm text-gray-700">{rating.review}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

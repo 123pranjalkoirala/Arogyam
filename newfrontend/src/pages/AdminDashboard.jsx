@@ -21,6 +21,7 @@ import {
   BarChart3,
   PieChart
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from "recharts";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -34,11 +35,19 @@ export default function AdminDashboard() {
   const [userFilter, setUserFilter] = useState("all");
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
+    // Allow access even without token (for admin pranjal access)
+    // But try to load data if token exists
+    if (token) {
+      loadData();
+      // Refresh stats every 30 seconds for real-time updates
+      const interval = setInterval(() => {
+        fetchStats();
+      }, 30000);
+      return () => clearInterval(interval);
+    } else {
+      // Show message that admin login is needed
+      toast.info("Please login as admin to access full features");
     }
-    loadData();
   }, []);
 
   const loadData = async () => {
@@ -315,6 +324,66 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Analytics Charts */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Appointments by Status (Pie Chart) */}
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">Appointments by Status</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <RechartsPieChart>
+                          <Pie
+                            data={stats.appointmentsByStatus || []}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {stats.appointmentsByStatus?.map((entry, index) => {
+                              const colors = ["#F59E0B", "#10B981", "#EF4444", "#3B82F6", "#6B7280"];
+                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            })}
+                          </Pie>
+                          <Tooltip />
+                        </RechartsPieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Appointments by Date (Line Chart) */}
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">Appointments Trend (Last 30 Days)</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={stats.appointmentsByDate || []}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="_id" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="count" stroke="#0F9D76" strokeWidth={2} name="Appointments" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Appointments by Specialization (Bar Chart) */}
+                  {stats.appointmentsBySpecialization && stats.appointmentsBySpecialization.length > 0 && (
+                    <div className="bg-white rounded-xl p-6 border border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">Appointments by Specialization</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={stats.appointmentsBySpecialization.map(item => ({ name: item._id || "Unknown", count: item.count }))}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="count" fill="#0F9D76" name="Appointments" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               )}
 

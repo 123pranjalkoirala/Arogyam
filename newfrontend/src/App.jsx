@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/AdminDashboard"
 import BookAppointment from "./pages/BookAppointment"
 import DoctorSearch from "./pages/DoctorSearch"
 import PaymentSuccess from "./pages/PaymentSuccess"
+import MockPayment from "./pages/MockPayment"
 import Navbar from "./components/Navbar"
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/book" element={<BookAppointment />} />
         <Route path="/doctors" element={<DoctorSearch />} />
+        <Route path="/payment/mock" element={<MockPayment />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/failure" element={<PaymentSuccess />} />
       </Routes>

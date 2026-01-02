@@ -14,7 +14,7 @@ export default function PaymentSuccess() {
     const processPayment = async () => {
       try {
         const paymentId = searchParams.get("paymentId");
-        const transactionId = searchParams.get("refId") || searchParams.get("transactionCode");
+        const appointmentId = searchParams.get("appointmentId");
 
         // Check if we're on failure page
         if (window.location.pathname.includes("failure")) {
@@ -22,7 +22,7 @@ export default function PaymentSuccess() {
           return;
         }
 
-        if (!paymentId) {
+        if (!paymentId || !appointmentId) {
           setStatus("error");
           return;
         }
@@ -36,7 +36,7 @@ export default function PaymentSuccess() {
           },
           body: JSON.stringify({
             paymentId,
-            transactionId
+            appointmentId
           })
         });
 

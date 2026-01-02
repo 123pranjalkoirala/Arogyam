@@ -393,34 +393,39 @@ Good sleep is not a luxury—it's a necessity for good health.`
                   </button>
                 </div>
 
-                {/* Stats */}
+                {/* Stats - Dynamic */}
                 <div className="grid grid-cols-3 gap-6 mt-12">
-                  <div>
-                    <div className="text-3xl font-bold text-[#0F9D76]">500+</div>
-                    <div className="text-sm text-gray-600 font-semibold">Verified Doctors</div>
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-[#0F9D76]/20">
+                    <div className="text-3xl font-bold text-[#0F9D76]">24/7</div>
+                    <div className="text-sm text-gray-600 font-semibold">Available</div>
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold text-[#0F9D76]">10K+</div>
-                    <div className="text-sm text-gray-600 font-semibold">Happy Patients</div>
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-[#0F9D76]/20">
+                    <div className="text-3xl font-bold text-[#0F9D76]">100%</div>
+                    <div className="text-sm text-gray-600 font-semibold">Secure</div>
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold text-[#0F9D76]">50K+</div>
-                    <div className="text-sm text-gray-600 font-semibold">Appointments</div>
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-[#0F9D76]/20">
+                    <div className="text-3xl font-bold text-[#0F9D76]">Easy</div>
+                    <div className="text-sm text-gray-600 font-semibold">Booking</div>
                   </div>
                 </div>
               </div>
 
-              {/* Hero Image - Using Local Image */}
+              {/* Hero Image - Using Local Image with Creative Overlay */}
               <div className="flex justify-center lg:justify-end">
-                <div className="relative">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#0F9D76]/20 to-transparent rounded-3xl z-10"></div>
                   <img
                     src="/landing page showcase image.webp"
-                    className="w-full max-w-lg rounded-3xl shadow-2xl object-cover h-[500px]"
+                    className="w-full max-w-lg rounded-3xl shadow-2xl object-cover h-[500px] transition-transform duration-500 group-hover:scale-105"
                     alt="Healthcare Professional"
                     onError={(e) => {
                       e.target.src = "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600";
                     }}
                   />
+                  <div className="absolute bottom-8 left-8 right-8 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-xl animate-fade-in">
+                    <p className="text-lg font-bold text-[#0F9D76] mb-1">Your Health, Our Priority</p>
+                    <p className="text-sm text-gray-600">Connect with trusted healthcare professionals anytime, anywhere</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -545,7 +550,7 @@ Good sleep is not a luxury—it's a necessity for good health.`
 
             {!quizStarted ? (
               <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
-                <div className="w-32 h-32 bg-gradient-to-br from-[#0F9D76] to-[#0d8a66] rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-32 h-32 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <span className="text-6xl">🧠</span>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
@@ -557,7 +562,7 @@ Good sleep is not a luxury—it's a necessity for good health.`
                 </p>
                 <button
                   onClick={resetQuiz}
-                  className="px-8 py-4 bg-[#0F9D76] text-white rounded-xl font-bold text-lg hover:bg-[#0d8a66] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="px-8 py-4 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-xl font-bold text-lg hover:from-[#059669] hover:to-[#047857] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   Start Quiz
                 </button>
@@ -590,7 +595,7 @@ Good sleep is not a luxury—it's a necessity for good health.`
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-[#0F9D76] h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-[#10B981] to-[#059669] h-2 rounded-full transition-all duration-300"
                       style={{ width: `${((currentQuestion + 1) / healthQuiz.length) * 100}%` }}
                     ></div>
                   </div>
@@ -624,7 +629,7 @@ Good sleep is not a luxury—it's a necessity for good health.`
                             buttonClass += "bg-gray-50 border-gray-200 text-gray-600";
                           }
                         } else {
-                          buttonClass += "bg-white border-gray-200 hover:border-[#0F9D76] hover:bg-[#0F9D76]/5 text-gray-900 cursor-pointer";
+                          buttonClass += "bg-white border-gray-200 hover:border-[#10B981] hover:bg-[#10B981]/5 text-gray-900 cursor-pointer";
                         }
                         
                         return (
@@ -647,8 +652,8 @@ Good sleep is not a luxury—it's a necessity for good health.`
                     </div>
 
                     {currentQuestion === healthQuiz.length - 1 && selectedAnswer !== null && (
-                      <div className="mt-8 p-6 bg-[#0F9D76]/10 rounded-xl text-center">
-                        <p className="text-2xl font-bold text-[#0F9D76] mb-2">
+                      <div className="mt-8 p-6 bg-gradient-to-r from-[#10B981]/10 to-[#059669]/10 rounded-xl text-center">
+                        <p className="text-2xl font-bold text-[#10B981] mb-2">
                           Quiz Complete!
                         </p>
                         <p className="text-gray-700 mb-4">
@@ -656,7 +661,7 @@ Good sleep is not a luxury—it's a necessity for good health.`
                         </p>
                         <button
                           onClick={resetQuiz}
-                          className="px-6 py-2 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all"
+                          className="px-6 py-2 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-lg font-semibold hover:from-[#059669] hover:to-[#047857] transition-all"
                         >
                           Take Quiz Again
                         </button>
@@ -718,31 +723,32 @@ Good sleep is not a luxury—it's a necessity for good health.`
           </div>
         </section>
 
-        {/* CONTACT SECTION */}
-        <section id="contact" className="py-16 bg-gradient-to-br from-[#E9F7EF] to-white">
-          <div className="max-w-7xl mx-auto px-6">
+        {/* CONTACT SECTION - Creative Design */}
+        <section id="contact" className="py-16 bg-gradient-to-br from-[#E9F7EF] via-white to-[#D6F6EB] relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
               <p className="text-xl text-gray-600">We're here to help you with your healthcare needs</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
-                <div className="w-16 h-16 bg-[#0F9D76]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">📍</span>
+              <div className="bg-white rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-[#10B981]">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <span className="text-4xl">📍</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Address</h3>
                 <p className="text-gray-600">Herald College Kathmandu<br />Nepal</p>
               </div>
-              <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
-                <div className="w-16 h-16 bg-[#0F9D76]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">📧</span>
+              <div className="bg-white rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-[#10B981]">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <span className="text-4xl">📧</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
                 <p className="text-gray-600">Pranjalkoirala02@gmail.com</p>
               </div>
-              <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
-                <div className="w-16 h-16 bg-[#0F9D76]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">📱</span>
+              <div className="bg-white rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-[#10B981]">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <span className="text-4xl">📱</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Phone</h3>
                 <p className="text-gray-600">9865121000</p>
@@ -752,14 +758,15 @@ Good sleep is not a luxury—it's a necessity for good health.`
         </section>
 
         {/* CTA SECTION */}
-        <section className="py-16 bg-gradient-to-r from-[#0F9D76] to-[#0d8a66] text-white">
-          <div className="max-w-7xl mx-auto px-6 text-center">
+        <section className="py-16 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-pattern opacity-10"></div>
+          <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
             <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-xl mb-8 text-white/90">Join thousands of patients who trust AROGYAM for their healthcare needs</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => navigate("/register")}
-                className="px-8 py-4 bg-white text-[#0F9D76] rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg"
+                className="px-8 py-4 bg-white text-[#10B981] rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Create Free Account
               </button>

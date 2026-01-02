@@ -8,13 +8,16 @@ const router = express.Router();
 // Initiate payment (Patient only)
 router.post("/initiate", requireAuth, initiatePayment);
 
-// Verify payment callback
-router.post("/verify", verifyPayment);
+// Verify payment callback (no auth required - called from payment gateway)
+router.post("/verify", requireAuth, verifyPayment);
 
 // Get payment status
 router.get("/status/:appointmentId", requireAuth, getPaymentStatus);
 
 export default router;
+
+
+
 
 
 

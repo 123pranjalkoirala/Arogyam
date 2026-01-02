@@ -9,6 +9,7 @@ import doctorsRoutes from "./routes/doctors.js";
 import adminRoutes from "./routes/admin.js";
 import reportsRoutes from "./routes/reports.js";
 import paymentsRoutes from "./routes/payments.js";
+import ratingsRoutes from "./routes/ratings.js";
 import path from "path";
 dotenv.config();
 connectDB();
@@ -22,6 +23,7 @@ app.use("/api/appointments", appointmentsRoutes);
 app.use("/api/doctors", doctorsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/ratings", ratingsRoutes);
 app.use("/uploads", express.static(path.resolve("uploads")));
 app.use("/api/reports", reportsRoutes);
 

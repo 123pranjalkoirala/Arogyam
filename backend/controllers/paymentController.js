@@ -1,20 +1,31 @@
 // backend/controllers/paymentController.js
 import Appointment from "../models/appointment.js";
 import User from "../models/user.js";
-import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
-// eSewa Configuration (Test/Sandbox environment)
-const ESEWA_SECRET = process.env.ESEWA_SECRET || "8gBm/:&EnhH.1/q";
-const ESEWA_MERCHANT_ID = process.env.ESEWA_MERCHANT_ID || "EPAYTEST";
-const ESEWA_URL = process.env.ESEWA_URL || "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+// Mock Payment System (for development/testing)
+// In production, replace with real payment gateway like Khalti, eSewa, etc.
 
-// Initiate payment
+// Helper to get user from token
+const getUserFromToken = (req) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return null;
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (err) {
+    return null;
+  }
+};
+
+// Initiate payment - Mock implementation
 export const initiatePayment = async (req, res) => {
   try {
     const { doctorId, date, time, reason } = req.body;
-    const token = req.headers.authorization?.split(" ")[1];
+    const user = getUserFromToken(req);
 
-    if (!token) {
+    if (!user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
@@ -25,45 +36,31 @@ export const initiatePayment = async (req, res) => {
       return res.status(404).json({ success: false, message: "Doctor not found" });
     }
 
-    const amount = doctor.consultationFee || 500; // Default fee
-    const taxAmount = 0;
-    const totalAmount = amount + taxAmount;
+    const amount = doctor.consultationFee || 500;
     const transactionUUID = `AROGYAM-${Date.now()}-${doctorId}`;
-    const productServiceCharge = 0;
-    const productDeliveryCharge = 0;
 
-    // Create signature
-    const string = `total_amount=${totalAmount},transaction_uuid=${transactionUUID},product_code=EPAYTEST`;
-    const signature = crypto
-      .createHash("sha256")
-      .update(string)
-      .digest("hex");
+    // Create appointment with pending payment
+    const appointment = await Appointment.create({
+      patientId: user.id,
+      doctorId,
+      date,
+      time,
+      reason,
+      status: "pending",
+      paymentStatus: "pending",
+      paymentId: transactionUUID,
+      amount: amount
+    });
 
-    // Return payment form data with booking details
+    // Return mock payment data - In production, this would redirect to payment gateway
     res.json({
       success: true,
-      paymentData: {
-        amount: totalAmount,
-        tax_amount: taxAmount,
-        total_amount: totalAmount,
-        transaction_uuid: transactionUUID,
-        product_code: "EPAYTEST",
-        product_service_charge: productServiceCharge,
-        product_delivery_charge: productDeliveryCharge,
-        success_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/payment/success?paymentId=${transactionUUID}&doctorId=${doctorId}&date=${date}&time=${time}&reason=${encodeURIComponent(reason || "")}&amount=${amount}`,
-        failure_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/payment/failure`,
-        signed_field_names: "total_amount,transaction_uuid,product_code",
-        signature: signature
-      },
-      bookingData: {
-        doctorId,
-        date,
-        time,
-        reason,
-        amount,
-        paymentId: transactionUUID
-      },
-      eSewaUrl: ESEWA_URL
+      paymentId: transactionUUID,
+      amount: amount,
+      appointmentId: appointment._id,
+      // Mock payment URL - In production, this would be the actual payment gateway URL
+      paymentUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/payment/mock?paymentId=${transactionUUID}&appointmentId=${appointment._id}`,
+      message: "Payment initiated. Redirecting to payment page..."
     });
   } catch (err) {
     console.error("Payment initiation error:", err);
@@ -71,20 +68,23 @@ export const initiatePayment = async (req, res) => {
   }
 };
 
-// Verify payment (Callback from eSewa)
+// Verify payment - Mock implementation
 export const verifyPayment = async (req, res) => {
   try {
-    const { paymentId, transactionId } = req.body;
+    const { paymentId, appointmentId } = req.body;
     
-    // Find appointment by paymentId
-    const appointment = await Appointment.findOne({ paymentId });
+    // Find appointment
+    const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
+    if (appointment.paymentId !== paymentId) {
+      return res.status(400).json({ success: false, message: "Invalid payment ID" });
+    }
+
     // Update appointment payment status
     appointment.paymentStatus = "paid";
-    appointment.eSewaTransactionId = transactionId;
     appointment.paymentDate = new Date();
     await appointment.save();
 
@@ -113,8 +113,7 @@ export const getPaymentStatus = async (req, res) => {
       success: true,
       paymentStatus: appointment.paymentStatus,
       amount: appointment.amount,
-      paymentId: appointment.paymentId,
-      eSewaTransactionId: appointment.eSewaTransactionId
+      paymentId: appointment.paymentId
     });
   } catch (err) {
     console.error("Get payment status error:", err);

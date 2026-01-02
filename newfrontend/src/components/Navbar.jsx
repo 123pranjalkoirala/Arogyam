@@ -50,31 +50,31 @@ export default function Navbar() {
             className="h-10"
             alt="AROGYAM"
           />
-          <h1 className="text-2xl font-extrabold text-[#0F9D76]">AROGYAM</h1>
+          <h1 className="text-2xl font-extrabold text-[#16A34A]">AROGYAM</h1>
         </div>
 
         {/* If NOT logged in → show PUBLIC NAV */}
         {!role && (
           <>
             <div className="hidden md:flex items-center gap-6 text-gray-700 font-medium">
-              <button onClick={() => navigate("/")} className="hover:text-[#0F9D76] transition-colors">Home</button>
-              <button onClick={() => scrollTo("specializations")} className="hover:text-[#0F9D76] transition-colors">Specialists</button>
-              <button onClick={() => scrollTo("features")} className="hover:text-[#0F9D76] transition-colors">Features</button>
-              <button onClick={() => scrollTo("articles")} className="hover:text-[#0F9D76] transition-colors">Health Tips</button>
-              <button onClick={() => scrollTo("quiz")} className="hover:text-[#0F9D76] transition-colors">Health Quiz</button>
-              <button onClick={() => scrollTo("about")} className="hover:text-[#0F9D76] transition-colors">About</button>
-              <button onClick={() => scrollTo("contact")} className="hover:text-[#0F9D76] transition-colors">Contact</button>
+              <button onClick={() => navigate("/")} className="hover:text-[#16A34A] transition-colors">Home</button>
+              <button onClick={() => scrollTo("specializations")} className="hover:text-[#16A34A] transition-colors">Specialists</button>
+              <button onClick={() => scrollTo("features")} className="hover:text-[#16A34A] transition-colors">Features</button>
+              <button onClick={() => scrollTo("articles")} className="hover:text-[#16A34A] transition-colors">Health Tips</button>
+              <button onClick={() => scrollTo("quiz")} className="hover:text-[#16A34A] transition-colors">Health Quiz</button>
+              <button onClick={() => scrollTo("about")} className="hover:text-[#16A34A] transition-colors">About</button>
+              <button onClick={() => scrollTo("contact")} className="hover:text-[#16A34A] transition-colors">Contact</button>
 
               <button
                 onClick={() => navigate("/login")}
-                className="px-4 py-2 rounded-lg border border-[#0F9D76] text-[#0F9D76] hover:bg-[#0F9D76] hover:text-white transition-all"
+                className="px-4 py-2 rounded-lg border border-[#16A34A] text-[#16A34A] hover:bg-[#16A34A] hover:text-white transition-all"
               >
                 Login
               </button>
 
               <button
                 onClick={() => navigate("/register")}
-                className="px-4 py-2 rounded-lg bg-[#0F9D76] text-white hover:bg-[#0d8a66] transition-all"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] text-white hover:bg-[#15803D] transition-all"
               >
                 Register
               </button>
@@ -99,7 +99,7 @@ export default function Navbar() {
             {role === "patient" && (
               <button
                 onClick={() => navigate("/doctors")}
-                className="bg-[#0F9D76] text-white px-4 py-2 rounded-md font-semibold hover:bg-[#0d8a66] transition-all"
+                className="bg-[#16A34A] text-white px-4 py-2 rounded-md font-semibold hover:bg-[#15803D] transition-all"
               >
                 Find Doctors
               </button>
@@ -120,7 +120,7 @@ export default function Navbar() {
 
             <button
               onClick={handleLogout}
-              className="bg-[#0F9D76] text-white px-4 py-2 rounded-full font-bold hover:bg-[#0d8a66] transition-all"
+              className="bg-[#16A34A] text-white px-4 py-2 rounded-full font-bold hover:bg-[#15803D] transition-all"
             >
               Logout
             </button>
@@ -139,8 +139,8 @@ export default function Navbar() {
           <button onClick={() => {scrollTo("about"); setMenuOpen(false);}} className="text-left py-2">About</button>
           <button onClick={() => {scrollTo("contact"); setMenuOpen(false);}} className="text-left py-2">Contact</button>
           <div className="border-t border-gray-200 pt-3 mt-2 flex gap-3">
-            <button onClick={() => {navigate("/login"); setMenuOpen(false);}} className="flex-1 px-4 py-2 border border-[#0F9D76] text-[#0F9D76] rounded-lg font-semibold">Login</button>
-            <button onClick={() => {navigate("/register"); setMenuOpen(false);}} className="flex-1 px-4 py-2 bg-[#0F9D76] text-white rounded-lg font-semibold">Register</button>
+            <button onClick={() => {navigate("/login"); setMenuOpen(false);}} className="flex-1 px-4 py-2 border border-[#16A34A] text-[#16A34A] rounded-lg font-semibold">Login</button>
+            <button onClick={() => {navigate("/register"); setMenuOpen(false);}} className="flex-1 px-4 py-2 bg-[#16A34A] text-white rounded-lg font-semibold">Register</button>
           </div>
         </div>
       )}
