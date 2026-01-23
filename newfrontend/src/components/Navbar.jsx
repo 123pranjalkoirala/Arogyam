@@ -1,6 +1,7 @@
 // Enhanced Navbar with More Sections
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Notifications from "./Notifications";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -95,6 +96,8 @@ export default function Navbar() {
             <div className="text-sm text-gray-600">
               {userName ? `Hi, ${userName}` : ""}
             </div>
+
+            {role === "patient" && <Notifications />}
 
             {role === "patient" && (
               <button

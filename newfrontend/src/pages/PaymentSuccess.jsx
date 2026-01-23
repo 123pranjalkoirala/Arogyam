@@ -1,78 +1,63 @@
-// Payment Success Page
+// src/pages/PaymentSuccess.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle, XCircle, Loader } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState("loading");
+  const [status, setStatus] = useState("verifying");
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const processPayment = async () => {
+    const verifyPayment = async () => {
+      const oid = searchParams.get("oid");
+      const amt = searchParams.get("amt");
+      const refId = searchParams.get("refId");
+
+      if (!oid || !amt || !refId) {
+        setStatus("failed");
+        toast.error("Invalid payment details");
+        return;
+      }
+
       try {
-        const paymentId = searchParams.get("paymentId");
-        const appointmentId = searchParams.get("appointmentId");
-
-        // Check if we're on failure page
-        if (window.location.pathname.includes("failure")) {
-          setStatus("error");
-          return;
-        }
-
-        if (!paymentId || !appointmentId) {
-          setStatus("error");
-          return;
-        }
-
-        // Verify payment and update appointment status
-        const verifyRes = await fetch("http://localhost:5000/api/payments/verify", {
+        const res = await fetch("http://localhost:5000/api/payments/verify-esewa", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            paymentId,
-            appointmentId
-          })
+          body: JSON.stringify({ oid, amt, refId }),
         });
 
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
+        const data = await res.json();
+
+        if (data.success) {
           setStatus("success");
-          toast.success("Payment successful! Appointment booked.");
-          setTimeout(() => {
-            navigate("/patient");
-          }, 3000);
+          toast.success("Payment successful! Appointment confirmed.");
         } else {
-          setStatus("error");
-          toast.error("Payment verification failed");
+          setStatus("failed");
+          toast.error(data.message || "Payment verification failed");
         }
       } catch (err) {
-        console.error(err);
-        setStatus("error");
-        toast.error("Payment verification error");
+        setStatus("failed");
+        toast.error("Network error during verification");
       }
     };
 
-    if (token) {
-      processPayment();
-    } else {
-      navigate("/login");
-    }
-  }, [searchParams, token, navigate]);
+    verifyPayment();
+  }, [searchParams, token]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E9F7EF] to-white flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-        {status === "loading" && (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+        {status === "verifying" && (
           <>
-            <Loader className="w-16 h-16 text-[#0F9D76] mx-auto mb-4 animate-spin" />
+            <Loader2 className="w-16 h-16 text-[#0F9D76] mx-auto mb-4 animate-spin" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifying Payment...</h2>
-            <p className="text-gray-600">Please wait while we verify your payment</p>
+            <p className="text-gray-600">Please wait while we confirm with eSewa</p>
           </>
         )}
 
@@ -80,21 +65,26 @@ export default function PaymentSuccess() {
           <>
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
-            <p className="text-gray-600 mb-4">Your appointment has been booked successfully</p>
-            <p className="text-sm text-gray-500">Redirecting to dashboard...</p>
+            <p className="text-gray-600 mb-6">Your appointment is confirmed.</p>
+            <button
+              onClick={() => navigate("/patient")}
+              className="px-8 py-3 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66]"
+            >
+              Go to Dashboard
+            </button>
           </>
         )}
 
-        {status === "error" && (
+        {status === "failed" && (
           <>
             <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h2>
-            <p className="text-gray-600 mb-4">There was an issue verifying your payment</p>
+            <p className="text-gray-600 mb-6">Please try booking again.</p>
             <button
               onClick={() => navigate("/patient")}
-              className="px-6 py-2 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all"
+              className="px-8 py-3 bg-gray-600 text-white rounded-lg font-semibold"
             >
-              Go to Dashboard
+              Back to Dashboard
             </button>
           </>
         )}

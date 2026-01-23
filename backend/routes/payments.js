@@ -1,25 +1,26 @@
-// backend/routes/payments.js
+// backend/routes/payments.js - Updated for working eSewa v2 test integration
 import express from "express";
-import { initiatePayment, verifyPayment, getPaymentStatus } from "../controllers/paymentController.js";
+import {
+  initiateEsewaPayment,
+  esewaPaymentCallback,
+  checkEsewaPaymentStatus,
+  verifyEsewaPayment,
+} from "../controllers/paymentController.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Initiate payment (Patient only)
-router.post("/initiate", requireAuth, initiatePayment);
+// Initiate eSewa payment (requires authentication)
+router.post("/initiate", requireAuth, initiateEsewaPayment);
 
-// Verify payment callback (no auth required - called from payment gateway)
-router.post("/verify", requireAuth, verifyPayment);
+// eSewa callback - called by eSewa (supports both GET and POST, no auth needed)
+router.get("/callback", esewaPaymentCallback);
+router.post("/callback", esewaPaymentCallback);
 
-// Get payment status
-router.get("/status/:appointmentId", requireAuth, getPaymentStatus);
+// Check payment status (requires authentication)
+router.post("/status", requireAuth, checkEsewaPaymentStatus);
+
+// Verify payment (requires authentication)
+router.post("/verify", requireAuth, verifyEsewaPayment);
 
 export default router;
-
-
-
-
-
-
-
-

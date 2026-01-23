@@ -68,8 +68,13 @@ router.get("/", requireAuth, async (req, res) => {
   try {
     let filter = {};
 
-    if (req.user.role === "patient") filter.patientId = req.user.id;
-    if (req.user.role === "doctor") filter.doctorId = req.user.id;
+    if (req.user.role === "patient") {
+      filter.patientId = req.user.id;
+    } else if (req.user.role === "doctor") {
+      filter.doctorId = req.user.id;
+      // Only show approved appointments to doctors
+      filter.status = "approved";
+    }
 
     const appointments = await Appointment.find(filter)
       .populate("patientId", "name email picture")

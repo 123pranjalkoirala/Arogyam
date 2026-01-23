@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { Search, User, Calendar as CalendarIcon, Star, Bell, Stethoscope, FileText } from "lucide-react";
+import BasicSOAPNotes from "../components/BasicSOAPNotes";
+import ScrollToTop from "../components/ScrollToTop";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
@@ -14,6 +17,7 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, completed: 0 });
   const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -223,6 +227,7 @@ export default function DoctorDashboard() {
             <div className="flex border-b border-gray-200 bg-gray-50">
               {[
                 { id: "appointments", label: "Appointments" },
+                { id: "soap", label: "SOAP Notes" },
                 { id: "profile", label: "My Profile" }
               ].map(tab => (
                 <button
@@ -332,28 +337,13 @@ export default function DoctorDashboard() {
                                 {a.status === "approved" && (
                                   <>
                                     <button
-                                      onClick={async () => {
-                                        // Mark meeting as started
-                                        try {
-                                          const res = await fetch(`http://localhost:5000/api/appointments/${a._id}/start-call`, {
-                                            method: "PUT",
-                                            headers: {
-                                              "Content-Type": "application/json",
-                                              Authorization: `Bearer ${token}`
-                                            }
-                                          });
-                                          if (res.ok) {
-                                            window.open(`https://meet.jit.si/arogyam-${a._id}`, "_blank");
-                                            fetchAppointments();
-                                          }
-                                        } catch (err) {
-                                          console.error(err);
-                                          window.open(`https://meet.jit.si/arogyam-${a._id}`, "_blank");
-                                        }
+                                      onClick={() => {
+                                        setSelectedAppointment(a);
+                                        setActiveTab("soap");
                                       }}
-                                      className="px-3 py-1.5 bg-[#0F9D76] text-white rounded-lg text-xs font-medium hover:bg-[#0d8a66] transition-all text-center"
+                                      className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-all"
                                     >
-                                      Start Call
+                                      SOAP Notes
                                     </button>
                                     <label className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-all cursor-pointer text-center">
                                       Upload Prescription
@@ -383,6 +373,59 @@ export default function DoctorDashboard() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SOAP NOTES TAB */}
+              {activeTab === "soap" && (
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Medical Documentation</h2>
+                    <p className="text-gray-600">Create and manage SOAP notes for patient consultations</p>
+                  </div>
+                  
+                  {!selectedAppointment ? (
+                    <div className="bg-gray-50 rounded-xl p-8 text-center">
+                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Select an Appointment</h3>
+                      <p className="text-gray-600 mb-4">Choose an appointment from the Appointments tab to create SOAP notes</p>
+                      <button
+                        onClick={() => setActiveTab("appointments")}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        Go to Appointments
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-blue-900">Selected Appointment</h4>
+                            <p className="text-blue-700">
+                              Patient: {selectedAppointment.patientId?.name || "Unknown"} | 
+                              Date: {selectedAppointment.date} | 
+                              Time: {selectedAppointment.time}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedAppointment(null)}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Clear Selection
+                          </button>
+                        </div>
+                      </div>
+                      <BasicSOAPNotes
+                        appointmentId={selectedAppointment._id}
+                        patientId={selectedAppointment.patientId?._id}
+                        onSave={() => {
+                          toast.success("Professional SOAP notes saved successfully");
+                          setSelectedAppointment(null);
+                        }}
+                      />
                     </div>
                   )}
                 </div>
@@ -549,6 +592,9 @@ export default function DoctorDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }

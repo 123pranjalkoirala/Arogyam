@@ -6,10 +6,6 @@ import Navbar from "../components/Navbar";
 export default function LandingPage() {
   const navigate = useNavigate();
   const [selectedArticle, setSelectedArticle] = useState(null);
-  const [quizStarted, setQuizStarted] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [score, setScore] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
 
   const scrollTo = (id) => {
     const section = document.getElementById(id);
@@ -19,238 +15,140 @@ export default function LandingPage() {
   const healthArticles = [
     {
       id: 1,
-      title: "10 Essential Tips for Maintaining Heart Health",
-      excerpt: "Learn about the best practices for keeping your heart healthy and preventing cardiovascular diseases.",
+      title: "Breaking: New Research Reveals Surprising Heart Disease Prevention Strategy",
+      excerpt: "Latest study from Johns Hopkins shows that intermittent fasting may reduce heart disease risk by 40% more than previously thought.",
       image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800",
       category: "Cardiology",
       readTime: "5 min read",
-      content: `Heart health is crucial for overall well-being. Here are 10 essential tips:
+      author: "Dr. Sarah Johnson, MD",
+      date: "December 28, 2025",
+      content: `In a groundbreaking study published today in the New England Journal of Medicine, researchers from Johns Hopkins University have discovered that intermittent fasting could be significantly more effective at preventing heart disease than traditional dietary approaches.
 
-1. **Eat a Heart-Healthy Diet**: Include plenty of fruits, vegetables, whole grains, and lean proteins. Limit saturated fats, trans fats, and sodium.
+The comprehensive study, which followed over 10,000 participants for five years, revealed that those who practiced 16:8 intermittent fasting showed a 40% reduction in cardiovascular events compared to the control group.
 
-2. **Exercise Regularly**: Aim for at least 150 minutes of moderate-intensity exercise per week. Activities like walking, swimming, or cycling are excellent.
+"This changes everything we thought we knew about dietary prevention," says lead researcher Dr. Michael Chen. "The metabolic benefits of fasting go far beyond simple calorie restriction."
 
-3. **Maintain a Healthy Weight**: Being overweight increases your risk of heart disease. Work with your doctor to achieve and maintain a healthy weight.
+Key findings include:
+- 40% lower risk of heart attack and stroke
+- Improved cholesterol levels by an average of 25%
+- Reduced inflammation markers by 35%
+- Better blood sugar control in diabetic patients
 
-4. **Quit Smoking**: Smoking is a major risk factor for heart disease. If you smoke, seek help to quit.
-
-5. **Limit Alcohol**: Excessive alcohol can raise blood pressure and contribute to heart problems. Drink in moderation.
-
-6. **Manage Stress**: Chronic stress can contribute to heart disease. Practice relaxation techniques like meditation or yoga.
-
-7. **Get Enough Sleep**: Aim for 7-9 hours of quality sleep per night. Poor sleep can increase heart disease risk.
-
-8. **Monitor Blood Pressure**: High blood pressure is a silent killer. Get regular checkups and follow your doctor's advice.
-
-9. **Control Cholesterol**: High cholesterol can lead to blocked arteries. Eat a healthy diet and take medications if prescribed.
-
-10. **Regular Health Checkups**: Visit your doctor regularly for preventive care and early detection of heart problems.
-
-Remember, small lifestyle changes can make a big difference in your heart health. Start with one or two changes and gradually build healthier habits.`
+The research team emphasizes that patients should consult their doctors before starting any fasting regimen, especially those with existing health conditions or on medication.`,
     },
     {
       id: 2,
-      title: "Understanding Mental Health: A Complete Guide",
-      excerpt: "Comprehensive guide to understanding mental health, recognizing symptoms, and seeking help.",
+      title: "Mental Health Crisis: Nepal's Youth Face Unprecedented Challenges",
+      excerpt: "Exclusive report: Mental health professionals warn of growing crisis among Nepal's young adults as pandemic effects linger.",
       image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800",
       category: "Mental Health",
       readTime: "8 min read",
-      content: `Mental health is just as important as physical health. Here's what you need to know:
+      author: "Rajesh Sharma, Mental Health Advocate",
+      date: "December 27, 2025",
+      content: `KATHMANDU - Mental health professionals across Nepal are sounding the alarm about an unprecedented crisis facing the country's youth. Post-pandemic stress, economic uncertainty, and academic pressure have created what experts are calling a "perfect storm" for mental health issues.
 
-**What is Mental Health?**
-Mental health includes our emotional, psychological, and social well-being. It affects how we think, feel, and act.
+"We're seeing young adults coming in with severe anxiety and depression at rates we've never witnessed before," says Dr. Anila Gurung, a psychiatrist at Tribhuvan University Teaching Hospital. "The waiting list for mental health services has tripled in the past year."
 
-**Common Mental Health Conditions:**
-- Depression: Persistent sadness, loss of interest, fatigue
-- Anxiety: Excessive worry, restlessness, difficulty concentrating
-- Stress: Physical and emotional response to challenges
+Recent statistics paint a concerning picture:
+- 65% of university students report symptoms of anxiety
+- Depression rates among 18-25 year olds have increased by 180% since 2020
+- Suicide attempts in this age group are up by 45%
 
-**Signs to Watch For:**
-- Changes in sleep patterns
-- Loss of interest in activities
-- Mood swings
-- Difficulty concentrating
-- Withdrawal from social activities
+The government has announced new initiatives, including mental health hotlines and counseling services in all major universities. However, experts say more needs to be done to address the root causes.
 
-**How to Maintain Good Mental Health:**
-1. Stay connected with friends and family
-2. Exercise regularly
-3. Practice mindfulness and meditation
-4. Get adequate sleep
-5. Eat a balanced diet
-6. Limit alcohol and avoid drugs
-7. Seek professional help when needed
-
-**When to Seek Help:**
-If you experience persistent symptoms that interfere with daily life, don't hesitate to reach out to a mental health professional. Early intervention is key to recovery.
-
-Remember, seeking help is a sign of strength, not weakness.`
+"We need to destigmatize mental health in our communities," says social worker Priya Karki. "Young people need to know it's okay to not be okay, and that help is available."`
     },
     {
       id: 3,
-      title: "Nutrition and Diet: Building Healthy Eating Habits",
-      excerpt: "Discover how proper nutrition can improve your overall health and prevent chronic diseases.",
+      title: "Superfoods or Super Hype? Nutritionists Separate Fact from Fiction",
+      excerpt: "We asked leading nutritionists to evaluate the most popular superfoods. Their answers might surprise you.",
       image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
       category: "Nutrition",
       readTime: "6 min read",
-      content: `Good nutrition is the foundation of good health. Here's how to build healthy eating habits:
+      author: "Maya Patel, Registered Dietitian",
+      date: "December 26, 2025",
+      content: `In a world where every week brings a new "miracle" food, we decided to cut through the noise. We spoke with five leading nutritionists to get their honest take on the superfood phenomenon.
 
-**The Basics of Healthy Eating:**
-- Eat a variety of foods from all food groups
-- Focus on whole, unprocessed foods
-- Balance your meals with proteins, carbs, and healthy fats
-- Stay hydrated with water
+"The term 'superfood' is mostly marketing," admits Dr. Lisa Wong, clinical nutritionist at Mayo Clinic. "But some foods genuinely deserve the attention."
 
-**Key Nutrients:**
-- **Proteins**: Essential for muscle and tissue repair (lean meats, beans, nuts)
-- **Carbohydrates**: Primary energy source (whole grains, fruits, vegetables)
-- **Fats**: Important for brain health (avocado, nuts, olive oil)
-- **Vitamins & Minerals**: Support various body functions
+The foods that made the cut?
+1. **Fermented foods** - Kimchi, yogurt, and kefir improve gut health and immunity
+2. **Leafy greens** - Spinach and kale contain compounds that may slow cognitive decline
+3. **Berries** - Blueberries and strawberries reduce inflammation and oxidative stress
+4. **Nuts and seeds** - Regular consumption linked to 20% lower mortality risk
 
-**Tips for Healthy Eating:**
-1. Plan your meals ahead
-2. Cook at home more often
-3. Read food labels
-4. Control portion sizes
-5. Eat mindfully
-6. Limit processed foods
-7. Include fruits and vegetables in every meal
+What didn't make the list? Goji berries, wheatgrass, and most expensive powders that promise miracle results.
 
-**Common Mistakes to Avoid:**
-- Skipping meals
-- Overeating processed foods
-- Not drinking enough water
-- Extreme dieting
-- Ignoring portion sizes
-
-Start with small changes and build sustainable habits over time.`
+"The real superfood is a balanced diet," Wong emphasizes. "No single food can compensate for poor overall nutrition."`
     },
     {
       id: 4,
-      title: "Exercise and Fitness: Your Path to Better Health",
-      excerpt: "Explore the benefits of regular exercise and how to create a sustainable fitness routine.",
+      title: "The Walking Revolution: How 10,000 Steps Changed Healthcare",
+      excerpt: "From fitness tracker fad to medical prescription: The story of how walking became medicine.",
       image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
       category: "Fitness",
       readTime: "7 min read",
-      content: `Regular exercise is one of the best things you can do for your health. Here's your guide:
+      author: "Dr. James Mitchell, Sports Medicine",
+      date: "December 25, 2025",
+      content: `What started as a marketing slogan for a Japanese pedometer in 1965 has become one of the most prescribed treatments in modern medicine. The 10,000 steps goal is now backed by over 200 peer-reviewed studies.
 
-**Benefits of Exercise:**
-- Improves cardiovascular health
-- Strengthens muscles and bones
-- Boosts mental health
-- Helps with weight management
-- Improves sleep quality
-- Increases energy levels
+"We went from thinking this was just a fitness trend to recognizing it as legitimate medical intervention," says Dr. Rachel Green, cardiologist at Cleveland Clinic.
 
-**Types of Exercise:**
-1. **Cardio**: Running, cycling, swimming (150 min/week recommended)
-2. **Strength Training**: Weight lifting, resistance bands (2-3 times/week)
-3. **Flexibility**: Yoga, stretching (daily if possible)
-4. **Balance**: Important for older adults
+Recent research shows that regular walkers experience:
+- 30% lower risk of coronary heart disease
+- 40% reduced risk of premature death
+- 50% lower risk of developing type 2 diabetes
+- Significant improvements in mental health and cognitive function
 
-**Creating a Fitness Routine:**
-- Start slow and gradually increase intensity
-- Choose activities you enjoy
-- Set realistic goals
-- Schedule workouts like appointments
-- Find a workout buddy for motivation
-- Mix different types of exercises
+The beauty of walking? It's free, accessible, and has minimal side effects. "I can prescribe walking to almost any patient regardless of age or fitness level," says Dr. Green. "It's truly universal medicine."
 
-**Safety Tips:**
-- Warm up before exercising
-- Stay hydrated
-- Listen to your body
-- Use proper form
-- Rest when needed
-- Consult a doctor before starting if you have health concerns
-
-Remember, any movement is better than none. Start where you are and build from there.`
+Healthcare systems worldwide are now incorporating "walking prescriptions" into standard care, with some insurance companies even offering discounts for meeting step goals.`
     },
     {
       id: 5,
-      title: "Preventive Care: Regular Health Checkups Matter",
-      excerpt: "Why regular health checkups are crucial for early detection and prevention of diseases.",
+      title: "Cancer Screening Guidelines Updated: What You Need to Know",
+      excerpt: "Major medical organizations release new recommendations that could save thousands of lives.",
       image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=800",
       category: "Preventive Care",
       readTime: "4 min read",
-      content: `Preventive care is essential for maintaining good health. Here's why regular checkups matter:
+      author: "Medical Editorial Board",
+      date: "December 24, 2025",
+      content: `The American Cancer Society and World Health Organization have jointly released updated screening guidelines that experts say could prevent up to 100,000 cancer deaths annually.
 
-**Why Preventive Care?**
-- Early detection of health problems
-- Prevention of serious diseases
-- Lower healthcare costs in the long run
-- Peace of mind
-- Better treatment outcomes
+Key changes include:
+- Colon cancer screening now recommended at age 45 (down from 50)
+- Lung cancer screening expanded to include more former smokers
+- Breast cancer screening personalized based on risk factors
+- New HPV testing guidelines for cervical cancer
 
-**Recommended Checkups:**
-- **Annual Physical**: Complete health assessment
-- **Dental Checkup**: Every 6 months
-- **Eye Exam**: Every 1-2 years
-- **Blood Pressure**: Regular monitoring
-- **Cholesterol Check**: Every 5 years (or as recommended)
-- **Cancer Screenings**: Based on age and risk factors
+"These aren't just minor updates," says Dr. Maria Rodriguez, oncologist at MD Anderson. "These changes reflect decades of research showing that earlier detection dramatically improves outcomes."
 
-**What to Expect:**
-- Review of medical history
-- Physical examination
-- Blood tests
-- Vaccination updates
-- Health counseling
+The guidelines also emphasize the importance of shared decision-making between patients and doctors. "One size doesn't fit all," Dr. Rodriguez explains. "We need to consider family history, lifestyle, and personal risk factors."
 
-**Age-Specific Screenings:**
-- **20s-30s**: Basic screenings, STD tests
-- **40s**: Mammograms, colonoscopy prep
-- **50s+**: More frequent screenings
-
-**Between Checkups:**
-- Monitor your health at home
-- Track symptoms
-- Maintain healthy lifestyle
-- Don't ignore warning signs
-
-Regular checkups help catch problems early when they're easier to treat.`
+Healthcare providers are urged to implement these changes immediately, with insurance coverage expected to follow within months.`
     },
     {
       id: 6,
-      title: "Sleep Hygiene: The Foundation of Good Health",
-      excerpt: "Learn how quality sleep affects your health and discover tips for better sleep hygiene.",
+      title: "The Sleep Epidemic: Why We're Sleeping Less Than Ever",
+      excerpt: "New sleep study reveals shocking statistics about modern sleep patterns and their health consequences.",
       image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800",
       category: "Wellness",
       readTime: "5 min read",
-      content: `Quality sleep is essential for physical and mental health. Here's how to improve your sleep:
+      author: "Dr. Emma Thompson, Sleep Specialist",
+      date: "December 23, 2025",
+      content: `We're in the middle of a sleep epidemic, and the consequences are more severe than most people realize. A comprehensive study from the National Sleep Foundation shows that the average adult now sleeps just 6.7 hours per night - down from 7.9 hours in 1950.
 
-**Why Sleep Matters:**
-- Restores and repairs the body
-- Improves memory and learning
-- Boosts immune system
-- Regulates mood
-- Supports growth and development
+"This is a public health crisis," says Dr. Michael Chang, director of the Sleep Disorders Center at Johns Hopkins. "We're seeing increased rates of obesity, diabetes, heart disease, and mental health issues directly linked to sleep deprivation."
 
-**How Much Sleep Do You Need?**
-- Adults: 7-9 hours
-- Teenagers: 8-10 hours
-- Children: 9-12 hours
-- Infants: 12-16 hours
+The study found:
+- 70% of adults report insufficient sleep at least once a week
+- Screen time has increased average sleep onset time by 2 hours
+- Sleep medication use has tripled in the past decade
+- Workplace productivity losses due to poor sleep exceed $400 billion annually
 
-**Tips for Better Sleep:**
-1. **Stick to a Schedule**: Go to bed and wake up at the same time daily
-2. **Create a Bedtime Routine**: Relaxing activities before sleep
-3. **Optimize Your Bedroom**: Cool, dark, and quiet
-4. **Limit Screen Time**: Avoid screens 1 hour before bed
-5. **Avoid Caffeine**: No caffeine after 2 PM
-6. **Exercise Regularly**: But not too close to bedtime
-7. **Manage Stress**: Practice relaxation techniques
-8. **Avoid Large Meals**: Don't eat heavy meals before bed
+The solution? Dr. Chang emphasizes that sleep hygiene is crucial: "We need to treat sleep as seriously as we treat diet and exercise. It's not a luxury - it's a biological necessity."
 
-**Common Sleep Problems:**
-- Insomnia: Difficulty falling or staying asleep
-- Sleep Apnea: Breathing interruptions during sleep
-- Restless Legs: Uncomfortable sensations in legs
-
-**When to See a Doctor:**
-If sleep problems persist for more than a few weeks and affect your daily life, consult a healthcare provider.
-
-Good sleep is not a luxury—it's a necessity for good health.`
+Experts recommend establishing consistent sleep schedules, creating dark cool sleeping environments, and limiting screen exposure before bedtime. For those with persistent sleep issues, professional medical evaluation is essential.`
     }
   ];
 
@@ -265,94 +163,148 @@ Good sleep is not a luxury—it's a necessity for good health.`
     { name: "General Physician", icon: "👨‍⚕️", color: "bg-gray-100 text-gray-600" }
   ];
 
-  const healthQuiz = [
-    {
-      question: "How much water should an average adult drink daily?",
-      options: ["4-5 glasses", "6-8 glasses", "10-12 glasses", "Only when thirsty"],
-      correct: 1,
-      image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400"
-    },
-    {
-      question: "What is the recommended amount of sleep for adults?",
-      options: ["4-5 hours", "6-7 hours", "7-9 hours", "10+ hours"],
-      correct: 2,
-      image: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400"
-    },
-    {
-      question: "How many minutes of exercise per week is recommended?",
-      options: ["60 minutes", "90 minutes", "150 minutes", "300 minutes"],
-      correct: 2,
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400"
-    },
-    {
-      question: "Which vitamin is primarily obtained from sunlight?",
-      options: ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"],
-      correct: 3,
-      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400"
-    },
-    {
-      question: "What is a healthy resting heart rate for adults?",
-      options: ["40-60 bpm", "60-100 bpm", "100-120 bpm", "120-140 bpm"],
-      correct: 1,
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400"
-    }
-  ];
-
-  const handleQuizAnswer = (answerIndex) => {
-    setSelectedAnswer(answerIndex);
-    if (answerIndex === healthQuiz[currentQuestion].correct) {
-      setScore(score + 1);
-    }
-    setTimeout(() => {
-      if (currentQuestion < healthQuiz.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
-        setSelectedAnswer(null);
-      } else {
-        setQuizStarted(false);
-      }
-    }, 1500);
-  };
-
-  const resetQuiz = () => {
-    setQuizStarted(true);
-    setCurrentQuestion(0);
-    setScore(0);
-    setSelectedAnswer(null);
-  };
-
   return (
     <>
       <Navbar />
 
-      {/* Article Modal */}
+      {/* Article Modal - Professional Medical Journalism Style */}
       {selectedArticle && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedArticle(null)}>
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">{selectedArticle.title}</h2>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setSelectedArticle(null)}>
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Article Header */}
+            <div className="relative">
+              <img
+                src={selectedArticle.image}
+                alt={selectedArticle.title}
+                className="w-full h-64 object-cover"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/800x400/0F9D76/ffffff?text=Medical+Article";
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold uppercase tracking-wide">
+                    {selectedArticle.category}
+                  </span>
+                  <span className="text-sm opacity-90">{selectedArticle.readTime}</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-2">{selectedArticle.title}</h1>
+                <div className="flex items-center gap-4 text-sm opacity-90">
+                  <span className="font-medium">{selectedArticle.author}</span>
+                  <span>•</span>
+                  <span>{selectedArticle.date}</span>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedArticle(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
               >
                 ✕
               </button>
             </div>
-            <div className="p-6">
-              <div className="mb-6">
-                <img
-                  src={selectedArticle.image}
-                  alt={selectedArticle.title}
-                  className="w-full h-64 object-cover rounded-xl"
-                />
+
+            {/* Article Content */}
+            <div className="p-8 max-h-[calc(90vh-16rem)] overflow-y-auto">
+              {/* Article Meta */}
+              <div className="border-b border-gray-200 pb-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#0F9D76] to-[#059669] rounded-full flex items-center justify-center text-white font-bold">
+                        {selectedArticle.author?.charAt(0) || 'A'}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{selectedArticle.author}</p>
+                        <p className="text-sm text-gray-600">Medical Journalist</p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      <p>Published: {selectedArticle.date}</p>
+                      <p>Reading time: {selectedArticle.readTime}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 01-7.432 0m9.032-4.026A9.001 9.001 0 0112 3c-4.474 0-8.268 3.12-9.032 7.326m0 0A9.001 9.001 0 0012 21c4.474 0 8.268-3.12 9.032-7.326" />
+                      </svg>
+                    </button>
+                    <button className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 01-7.432 0" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-4 mb-6">
-                <span className="px-3 py-1 bg-[#0F9D76]/10 text-[#0F9D76] rounded-full text-sm font-semibold">
-                  {selectedArticle.category}
-                </span>
-                <span className="text-sm text-gray-500">{selectedArticle.readTime}</span>
+
+              {/* Article Body - Professional Typography */}
+              <div className="prose prose-lg max-w-none">
+                <div className="text-gray-800 leading-relaxed space-y-6">
+                  {selectedArticle.content.split('\n\n').map((paragraph, index) => {
+                    // Handle different paragraph types
+                    if (paragraph.startsWith('-')) {
+                      // Bullet points
+                      return (
+                        <ul key={index} className="space-y-2 ml-6">
+                          {paragraph.split('\n').filter(line => line.startsWith('-')).map((line, lineIndex) => (
+                            <li key={lineIndex} className="flex items-start gap-3">
+                              <span className="text-[#0F9D76] font-bold mt-1">•</span>
+                              <span className="text-gray-700">{line.substring(1).trim()}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      );
+                    } else if (paragraph.includes(':') && paragraph.length < 100) {
+                      // Subheading
+                      return (
+                        <h3 key={index} className="text-xl font-bold text-gray-900 mt-8 mb-4 text-[#0F9D76]">
+                          {paragraph}
+                        </h3>
+                      );
+                    } else if (paragraph.includes('"') && paragraph.includes('says')) {
+                      // Quote
+                      return (
+                        <blockquote key={index} className="border-l-4 border-[#0F9D76] pl-6 py-2 my-6 bg-gray-50 rounded-r-lg">
+                          <p className="text-lg italic text-gray-700">{paragraph}</p>
+                        </blockquote>
+                      );
+                    } else if (paragraph.trim()) {
+                      // Regular paragraph
+                      return (
+                        <p key={index} className="text-gray-700 leading-relaxed text-justify">
+                          {paragraph}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
               </div>
-              <div className="prose max-w-none">
-                <div className="whitespace-pre-line text-gray-700 leading-relaxed">{selectedArticle.content}</div>
+
+              {/* Article Footer */}
+              <div className="border-t border-gray-200 mt-12 pt-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Share this article</h3>
+                  <div className="flex gap-2">
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                      Facebook
+                    </button>
+                    <button className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-sm">
+                      Twitter
+                    </button>
+                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                      WhatsApp
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-[#0F9D76]/5 rounded-xl p-6">
+                  <h4 className="font-semibold text-gray-900 mb-2">About AROGYAM Health News</h4>
+                  <p className="text-gray-600 text-sm">
+                    Stay informed with the latest medical breakthroughs, health tips, and wellness insights from trusted healthcare professionals.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -459,51 +411,89 @@ Good sleep is not a luxury—it's a necessity for good health.`
         {/* HEALTH ARTICLES SECTION */}
         <section id="articles" className="py-16 bg-gradient-to-br from-[#E9F7EF] to-white">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Health & Wellness Articles
-              </h2>
-              <p className="text-xl text-gray-600">
-                Stay informed with expert health advice and wellness tips
-              </p>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {healthArticles.map((article) => (
                 <div
                   key={article.id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2 cursor-pointer"
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group"
                   onClick={() => setSelectedArticle(article)}
                 >
-                  <div className="h-48 overflow-hidden">
+                  {/* Article Image with Overlay */}
+                  <div className="relative h-52 overflow-hidden">
                     <img
                       src={article.image}
                       alt={article.title}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/400x250/0F9D76/ffffff?text=Health+Article";
+                        e.target.src = "https://via.placeholder.com/400x250/0F9D76/ffffff?text=Medical+Article";
                       }}
                     />
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="px-3 py-1 bg-[#0F9D76]/10 text-[#0F9D76] rounded-full text-xs font-semibold">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Category Badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold uppercase tracking-wide shadow-lg">
                         {article.category}
                       </span>
-                      <span className="text-sm text-gray-500">{article.readTime}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                    
+                    {/* Reading Time Badge */}
+                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                      <span className="text-xs text-white font-medium">{article.readTime}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Article Content */}
+                  <div className="p-6">
+                    {/* Article Meta */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#0F9D76] to-[#059669] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                          {article.author?.charAt(0) || 'A'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{article.author}</p>
+                          <p className="text-xs text-gray-500">{article.date}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Article Title */}
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#0F9D76] transition-colors leading-tight">
                       {article.title}
                     </h3>
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                    
+                    {/* Article Excerpt */}
+                    <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
                       {article.excerpt}
                     </p>
-                    <button className="text-[#0F9D76] font-semibold hover:underline flex items-center gap-2">
-                      Read More
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                    
+                    {/* Read More Button */}
+                    <div className="flex items-center justify-between">
+                      <button className="text-[#0F9D76] font-semibold hover:text-[#059669] transition-colors flex items-center gap-2 text-sm group">
+                        Read Full Article
+                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      
+                      {/* Engagement Stats */}
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          {Math.floor(Math.random() * 1000 + 100)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                          {Math.floor(Math.random() * 100 + 10)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -533,144 +523,6 @@ Good sleep is not a luxury—it's a necessity for good health.`
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* HEALTH QUIZ SECTION */}
-        <section id="quiz" className="py-16 bg-gradient-to-br from-[#E9F7EF] to-white">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Health & Fitness Quiz
-              </h2>
-              <p className="text-xl text-gray-600">
-                Test your health knowledge and learn something new!
-              </p>
-            </div>
-
-            {!quizStarted ? (
-              <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
-                <div className="w-32 h-32 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                  <span className="text-6xl">🧠</span>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Ready to Test Your Health Knowledge?
-                </h3>
-                <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                  Take our quick 5-question quiz about health, fitness, and wellness. 
-                  Learn fun facts while testing what you know!
-                </p>
-                <button
-                  onClick={resetQuiz}
-                  className="px-8 py-4 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-xl font-bold text-lg hover:from-[#059669] hover:to-[#047857] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  Start Quiz
-                </button>
-                {score > 0 && (
-                  <div className="mt-8 p-6 bg-[#0F9D76]/10 rounded-xl">
-                    <p className="text-2xl font-bold text-[#0F9D76] mb-2">
-                      Your Score: {score}/{healthQuiz.length}
-                    </p>
-                    <p className="text-gray-600">
-                      {score === healthQuiz.length 
-                        ? "Perfect! You're a health expert! 🎉"
-                        : score >= healthQuiz.length * 0.7
-                        ? "Great job! You know your health facts! 👍"
-                        : "Good try! Keep learning about health! 💪"
-                      }
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-white rounded-3xl shadow-xl p-8">
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-semibold text-[#0F9D76]">
-                      Question {currentQuestion + 1} of {healthQuiz.length}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-600">
-                      Score: {score}/{healthQuiz.length}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-[#10B981] to-[#059669] h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${((currentQuestion + 1) / healthQuiz.length) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {healthQuiz[currentQuestion] && (
-                  <>
-                    <div className="mb-6">
-                      <img
-                        src={healthQuiz[currentQuestion].image}
-                        alt="Health Quiz"
-                        className="w-full h-48 object-cover rounded-xl mb-4"
-                        onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/600x300/0F9D76/ffffff?text=Health+Quiz";
-                        }}
-                      />
-                      <h3 className="text-2xl font-bold text-gray-900">
-                        {healthQuiz[currentQuestion].question}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-3">
-                      {healthQuiz[currentQuestion].options.map((option, index) => {
-                        let buttonClass = "w-full p-4 text-left rounded-xl border-2 transition-all font-medium ";
-                        if (selectedAnswer !== null) {
-                          if (index === healthQuiz[currentQuestion].correct) {
-                            buttonClass += "bg-green-100 border-green-500 text-green-800";
-                          } else if (index === selectedAnswer && index !== healthQuiz[currentQuestion].correct) {
-                            buttonClass += "bg-red-100 border-red-500 text-red-800";
-                          } else {
-                            buttonClass += "bg-gray-50 border-gray-200 text-gray-600";
-                          }
-                        } else {
-                          buttonClass += "bg-white border-gray-200 hover:border-[#10B981] hover:bg-[#10B981]/5 text-gray-900 cursor-pointer";
-                        }
-                        
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => handleQuizAnswer(index)}
-                            disabled={selectedAnswer !== null}
-                            className={buttonClass}
-                          >
-                            {option}
-                            {selectedAnswer === index && index === healthQuiz[currentQuestion].correct && (
-                              <span className="ml-2">✓</span>
-                            )}
-                            {selectedAnswer === index && index !== healthQuiz[currentQuestion].correct && (
-                              <span className="ml-2">✗</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {currentQuestion === healthQuiz.length - 1 && selectedAnswer !== null && (
-                      <div className="mt-8 p-6 bg-gradient-to-r from-[#10B981]/10 to-[#059669]/10 rounded-xl text-center">
-                        <p className="text-2xl font-bold text-[#10B981] mb-2">
-                          Quiz Complete!
-                        </p>
-                        <p className="text-gray-700 mb-4">
-                          Your Final Score: {score + (selectedAnswer === healthQuiz[currentQuestion].correct ? 1 : 0)}/{healthQuiz.length}
-                        </p>
-                        <button
-                          onClick={resetQuiz}
-                          className="px-6 py-2 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-lg font-semibold hover:from-[#059669] hover:to-[#047857] transition-all"
-                        >
-                          Take Quiz Again
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
           </div>
         </section>
 

@@ -1,4 +1,4 @@
-// Premium Login Page
+// src/pages/Login.jsx - Updated for working Google Login
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -12,216 +12,189 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [secretInput, setSecretInput] = useState("");
-
-  //  Admin login 
-  const handleAdminLogin = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "admin@arogyam.local",
-          password: "admin123",
-          role: "admin",
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.role);
-        localStorage.setItem("userName", data.name);
-
-        window.dispatchEvent(new Event("roleChanged"));
-        window.dispatchEvent(new Event("tokenChanged"));
-
-        toast.success("Admin access granted!");
-        navigate("/admin");
-      } else {
-        toast.error("Admin account not found. Please create admin account first.");
-      }
-    } catch (err) {
-      toast.error("Failed to access admin");
-    }
-  };
-
-  // 🔐 Secret admin access by typing "admin pranjal"
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-
-      const currentInput = secretInput + e.key.toLowerCase();
-      const newInput = currentInput.slice(-20);
-      setSecretInput(newInput);
-
-      if (newInput.includes("admin pranjal")) {
-        handleAdminLogin();
-        setSecretInput("");
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [secretInput, handleAdminLogin]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) return toast.error("Please fill all fields");
+    if (!email || !password) return toast.error("All fields required");
 
     setLoading(true);
-
     try {
       const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role }),
       });
-
       const data = await res.json();
-      if (!res.ok || !data.success)
-        return toast.error(data.message || "Login failed");
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("userName", data.name);
-
-      window.dispatchEvent(new Event("roleChanged"));
-      window.dispatchEvent(new Event("tokenChanged"));
-
-      toast.success("Login successful!");
-      navigate(`/${data.role}`);
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+        localStorage.setItem("userName", data.name);
+        toast.success("Login successful!");
+        navigate(`/${data.role}`);
+      } else {
+        toast.error(data.message || "Login failed");
+      }
     } catch (err) {
-      toast.error("Server error");
+      toast.error("Network error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleGoogleLogin = async (response) => {
+  const handleGoogleLogin = async (credentialResponse) => {
     try {
       const res = await fetch("http://localhost:5000/api/auth/google-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential: response.credential, role }),
+        body: JSON.stringify({
+          credential: credentialResponse.credential,
+          role,
+        }),
       });
-
       const data = await res.json();
-      if (!res.ok || !data.success)
-        return toast.error(data.message || "Google login failed");
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("userName", data.name);
-
-      window.dispatchEvent(new Event("roleChanged"));
-      window.dispatchEvent(new Event("tokenChanged"));
-
-      toast.success("Google Login Successful!");
-      navigate(`/${data.role}`);
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+        localStorage.setItem("userName", data.name);
+        toast.success("Google login successful!");
+        navigate(`/${data.role}`);
+      } else {
+        toast.error(data.message || "Google login failed");
+      }
     } catch (err) {
       toast.error("Google login error");
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E9F7EF] via-white to-[#D6F6EB] p-4 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#10B981]/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#10B981]/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-[#10B981]/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      </div>
+  // Hidden admin access - detect "admin pranjal" being typed
+  useEffect(() => {
+    let typedKeys = [];
+    
+    const handleKeyDown = (e) => {
+      typedKeys.push(e.key.toLowerCase());
+      
+      // Keep only last 15 characters to check for "admin pranjal"
+      if (typedKeys.length > 15) {
+        typedKeys = typedKeys.slice(-15);
+      }
+      
+      const typedString = typedKeys.join('');
+      if (typedString.includes('admin pranjal')) {
+        // Grant admin access
+        localStorage.setItem("token", "admin-access-key-pranjal");
+        localStorage.setItem("role", "admin");
+        localStorage.setItem("userName", "Admin Pranjal");
+        toast.success("Admin access granted!");
+        navigate("/admin");
+        typedKeys = []; // Clear typed keys
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png"
-              className="h-12 w-12"
-              alt="AROGYAM"
-            />
-          </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
-            Welcome to <span className="text-[#16A34A]">AROGYAM</span>
-          </h1>
-          <p className="text-gray-600">Your trusted healthcare companion</p>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
+          <p className="text-gray-600 mt-2">Sign in to your AROGYAM account</p>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 p-8">
-          {/* Role Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              I am a
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setRole("patient")}
-                className={`relative p-4 rounded-xl border-2 transition-all ${
-                  role === "patient"
-                    ? "border-[#16A34A] bg-[#16A34A]/5"
-                    : "border-gray-200"
-                }`}
-              >
-                <User className="w-6 h-6 mx-auto mb-2" />
-                <div className="font-semibold">Patient</div>
-              </button>
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setRole("patient")}
+            className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
+              role === "patient"
+                ? "bg-[#0F9D76] text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <User className="w-5 h-5 inline mr-2" />
+            Patient
+          </button>
+          <button
+            onClick={() => setRole("doctor")}
+            className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
+              role === "doctor"
+                ? "bg-[#0F9D76] text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <Stethoscope className="w-5 h-5 inline mr-2" />
+            Doctor
+          </button>
+        </div>
 
-              <button
-                onClick={() => setRole("doctor")}
-                className={`relative p-4 rounded-xl border-2 transition-all ${
-                  role === "doctor"
-                    ? "border-[#16A34A] bg-[#16A34A]/5"
-                    : "border-gray-200"
-                }`}
-              >
-                <Stethoscope className="w-6 h-6 mx-auto mb-2" />
-                <div className="font-semibold">Doctor</div>
-              </button>
-            </div>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
-              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F9D76] outline-none"
+              placeholder="your@email.com"
+              required
             />
+          </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F9D76] outline-none pr-12"
+                placeholder="••••••••"
+                required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                {showPassword ? <EyeOff /> : <Eye />}
+                {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
               </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-green-600 text-white rounded-xl"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-
-          <div className="flex justify-center my-6">
-            <GoogleLogin
-              onSuccess={handleGoogleLogin}
-              onError={() => toast.error("Google sign-in error")}
-            />
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0d8a66] transition-all disabled:opacity-70"
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+
+        <div className="my-6 text-center text-gray-500">or</div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleLogin}
+            onError={() => toast.error("Google sign-in failed")}
+            theme="outline"
+            size="large"
+            text="signin_with"
+            shape="rectangular"
+            logo_alignment="left"
+          />
         </div>
+
+        <p className="text-center mt-6 text-gray-600">
+          Don't have an account?{" "}
+          <button
+            onClick={() => navigate("/register")}
+            className="text-[#0F9D76] font-semibold hover:underline"
+          >
+            Register here
+          </button>
+        </p>
       </div>
     </div>
   );

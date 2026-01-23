@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
+import ScrollToTop from "../components/ScrollToTop";
 import { 
   Users, 
   UserCheck, 
@@ -35,19 +36,13 @@ export default function AdminDashboard() {
   const [userFilter, setUserFilter] = useState("all");
 
   useEffect(() => {
-    // Allow access even without token (for admin pranjal access)
-    // But try to load data if token exists
-    if (token) {
-      loadData();
-      // Refresh stats every 30 seconds for real-time updates
-      const interval = setInterval(() => {
-        fetchStats();
-      }, 30000);
-      return () => clearInterval(interval);
-    } else {
-      // Show message that admin login is needed
-      toast.info("Please login as admin to access full features");
-    }
+    // Load data regardless of token (for admin pranjal access)
+    loadData();
+    // Refresh stats every 30 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -63,8 +58,9 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
       const res = await fetch("http://localhost:5000/api/admin/stats", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers
       });
       const data = await res.json();
       if (data.success) {
@@ -77,8 +73,9 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
       const res = await fetch("http://localhost:5000/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers
       });
       const data = await res.json();
       if (data.success) {
@@ -91,8 +88,9 @@ export default function AdminDashboard() {
 
   const fetchAppointments = async () => {
     try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
       const res = await fetch("http://localhost:5000/api/admin/appointments", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers
       });
       const data = await res.json();
       if (data.success) {
@@ -107,19 +105,64 @@ export default function AdminDashboard() {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
       const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
+        headers
       });
       const data = await res.json();
       if (data.success) {
         toast.success("User deleted successfully");
         fetchUsers();
+        fetchStats(); // Refresh stats
       } else {
         toast.error(data.message || "Failed to delete user");
       }
     } catch (err) {
       toast.error("Failed to delete user");
+    }
+  };
+
+  const deleteAppointment = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
+      const res = await fetch(`http://localhost:5000/api/admin/appointments/${id}`, {
+        method: "DELETE",
+        headers
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Appointment deleted successfully");
+        fetchAppointments();
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error(data.message || "Failed to delete appointment");
+      }
+    } catch (err) {
+      toast.error("Failed to delete appointment");
+    }
+  };
+
+  const updateAppointmentStatus = async (id, status) => {
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
+      const res = await fetch(`http://localhost:5000/api/admin/appointments/${id}/status`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Appointment ${status} successfully`);
+        fetchAppointments();
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error(data.message || "Failed to update appointment");
+      }
+    } catch (err) {
+      toast.error("Failed to update appointment");
     }
   };
 
@@ -135,6 +178,7 @@ export default function AdminDashboard() {
   const getStatusBadge = (status) => {
     const badges = {
       pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      pending_approval: "bg-orange-100 text-orange-800 border-orange-200",
       approved: "bg-green-100 text-green-800 border-green-200",
       rejected: "bg-red-100 text-red-800 border-red-200",
       completed: "bg-blue-100 text-blue-800 border-blue-200",
@@ -520,6 +564,31 @@ export default function AdminDashboard() {
                             <td className="px-4 py-4 text-sm text-gray-600 max-w-xs truncate">
                               {apt.reason || "-"}
                             </td>
+                            <td className="px-4 py-4">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => updateAppointmentStatus(apt._id, "approved")}
+                                  className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-all flex items-center gap-1"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => updateAppointmentStatus(apt._id, "rejected")}
+                                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all flex items-center gap-1"
+                                >
+                                  <XCircle className="w-3 h-3" />
+                                  Reject
+                                </button>
+                                <button
+                                  onClick={() => deleteAppointment(apt._id)}
+                                  className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-xs font-medium hover:bg-gray-600 transition-all flex items-center gap-1"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -534,10 +603,13 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-        </div>
-        </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }
