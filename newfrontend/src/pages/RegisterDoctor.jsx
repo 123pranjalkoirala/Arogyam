@@ -32,7 +32,19 @@ export default function RegisterDoctor() {
     experience: "",
     consultationFee: "",
     bio: "",
-    gender: ""
+    gender: "",
+    medicalLicense: "",
+    hospitalAffiliation: "",
+    languages: "",
+    availability: {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false
+    }
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,8 +53,8 @@ export default function RegisterDoctor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.email || !form.password || !form.specialization || !form.qualification) {
-      return toast.error("Please fill all required fields including specialization and qualification");
+    if (!form.name || !form.email || !form.password || !form.specialization || !form.qualification || !form.experience || !form.consultationFee) {
+      return toast.error("Please fill all required fields including name, email, password, specialization, qualification, experience, and consultation fee");
     }
 
     if (form.password !== form.confirmPassword) {
@@ -70,7 +82,19 @@ export default function RegisterDoctor() {
           experience: parseInt(form.experience) || 0,
           consultationFee: parseInt(form.consultationFee) || 500,
           bio: form.bio,
-          gender: form.gender
+          gender: form.gender,
+          medicalLicense: form.medicalLicense,
+          hospitalAffiliation: form.hospitalAffiliation,
+          languages: form.languages ? form.languages.split(',').map(lang => lang.trim()) : [],
+          availability: {
+            monday: form.availability.monday || false,
+            tuesday: form.availability.tuesday || false,
+            wednesday: form.availability.wednesday || false,
+            thursday: form.availability.thursday || false,
+            friday: form.availability.friday || false,
+            saturday: form.availability.saturday || false,
+            sunday: form.availability.sunday || false
+          }
         }),
       });
 
@@ -127,31 +151,63 @@ export default function RegisterDoctor() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gender
+                    Specialization <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={form.gender}
-                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    value={form.specialization}
+                    onChange={(e) => setForm({ ...form, specialization: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    required
                   >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="">Select Specialization</option>
+                    {SPECIALIZATIONS.map((spec) => (
+                      <option key={spec} value={spec}>{spec}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span className="text-red-500">*</span>
+                    Qualification <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.qualification}
+                    onChange={(e) => setForm({ ...form, qualification: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    placeholder="e.g., MBBS, MD, MS, etc."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Experience (years) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={form.experience}
+                    onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    placeholder="e.g., 5"
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Consultation Fee (Rs.) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      type="number"
+                      value={form.consultationFee}
+                      onChange={(e) => setForm({ ...form, consultationFee: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                      placeholder="e.g., 500"
+                      min="0"
                       required
                     />
                   </div>
@@ -159,17 +215,82 @@ export default function RegisterDoctor() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
+                    Bio
                   </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
-                      placeholder="98XXXXXXXX"
-                    />
+                  <textarea
+                    value={form.bio}
+                    onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none resize-none"
+                    placeholder="Brief professional bio..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Medical License Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.medicalLicense}
+                    onChange={(e) => setForm({ ...form, medicalLicense: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    placeholder="e.g., NMC123456"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hospital Affiliation
+                  </label>
+                  <input
+                    type="text"
+                    value={form.hospitalAffiliation}
+                    onChange={(e) => setForm({ ...form, hospitalAffiliation: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    placeholder="e.g., City Medical Center"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Languages (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.languages}
+                    onChange={(e) => setForm({ ...form, languages: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    placeholder="e.g., English, Nepali, Hindi"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-4">
+                    Availability
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {Object.entries(form.availability).map(([day, available]) => (
+                      <div key={day} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={day}
+                          checked={available}
+                          onChange={(e) => setForm({
+                            ...form,
+                            availability: {
+                              ...form.availability,
+                              [day]: e.target.checked
+                            }
+                          })}
+                          className="h-4 w-4 text-[#0F9D76] focus:ring-[#0F9D76] border-gray-300 rounded focus:ring-[#0F9D76]"
+                        />
+                        <label htmlFor={day} className="ml-2 text-sm font-medium text-gray-700 capitalize">
+                          {day.charAt(0).toUpperCase() + day.slice(1)}
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

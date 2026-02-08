@@ -8,6 +8,12 @@ const reportSchema = new mongoose.Schema({
   title: String,
   fileUrl: String,
 
+  // SOAP-like information fields
+  subjective: String,
+  objective: String,
+  assessment: String,
+  plan: String,
+
   createdAt: { type: Date, default: Date.now }
 });
 

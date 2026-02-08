@@ -1,71 +1,90 @@
 // SOAP Controller - Professional Medical Documentation System
-import SOAPNote from "../models/soapNote.js";
+import SOAP from "../models/soapNote.js";
 import Appointment from "../models/appointment.js";
 import User from "../models/user.js";
-import jwt from "jsonwebtoken";
+import Notification from "../models/Notification.js";
 
-// Get user from JWT token
-const getUserFromToken = (req) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return null;
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return decoded;
-  } catch (err) {
-    return null;
-  }
-};
-
-// Create new SOAP note
+// Create new SOAP note - Simplified and Working Version
 export const createSOAPNote = async (req, res) => {
   try {
-    const { appointmentId, soapNotes } = req.body;
-    const user = getUserFromToken(req);
+    const { appointmentId, subjective, objective, assessment, plan } = req.body;
+    const user = req.user;
+    
+    console.log("=== SOAP CREATE START ===");
+    console.log("User:", user?.name, "Role:", user?.role);
+    console.log("Appointment ID:", appointmentId);
     
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Authentication required" 
-      });
+      return res.status(401).json({ success: false, message: "Authentication required" });
     }
-
-    // Verify appointment exists and belongs to doctor
-    const appointment = await Appointment.findById(appointmentId);
+    
+    // Get appointment
+    const appointment = await Appointment.findById(appointmentId)
+      .populate('doctorId', 'name email')
+      .populate('patientId', 'name email');
+    
     if (!appointment) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Appointment not found" 
-      });
+      return res.status(404).json({ success: false, message: "Appointment not found" });
     }
-
-    if (appointment.doctorId.toString() !== user.id) {
-      return res.status(403).json({ 
-        success: false, 
-        message: "Not authorized to create SOAP note for this appointment" 
-      });
+    
+    console.log("Appointment found:", appointment._id, "Current status:", appointment.status);
+    
+    // Check authorization
+    if (user.role === 'doctor' && appointment.doctorId._id.toString() !== user.id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
-
-    // Parse and validate SOAP data
+    
+    // Force update appointment to completed status
+    console.log("=== UPDATING APPOINTMENT STATUS ===");
+    await Appointment.findByIdAndUpdate(appointmentId, { 
+      status: 'completed',
+      completedAt: new Date()
+    });
+    console.log("Appointment marked as completed");
+    
+    // Create or update SOAP note
     const soapData = {
       appointmentId,
-      patientId: appointment.patientId,
-      doctorId: user.id,
-      ...soapNotes,
-      status: 'draft'
+      doctorId: appointment.doctorId._id,
+      patientId: appointment.patientId._id,
+      subjective,
+      objective,
+      assessment,
+      plan,
+      createdBy: user.id,
+      createdAt: new Date()
     };
-
-    // Create SOAP note
-    const soapNote = new SOAPNote(soapData);
-    await soapNote.save();
-
+    
+    const soapNote = await SOAP.findOneAndUpdate(
+      { appointmentId },
+      soapData,
+      { upsert: true, new: true, runValidators: true }
+    );
+    
+    console.log("SOAP note saved:", soapNote._id);
+    
+    // Send notification
+    if (user.role === 'doctor') {
+      await Notification.create({
+        userId: appointment.patientId._id,
+        title: "Medical Notes Available",
+        message: `Dr. ${user.name} has added medical notes for your appointment`,
+        type: "soap_notes",
+        relatedId: appointmentId,
+        read: false
+      });
+      console.log("Notification sent to patient");
+    }
+    
+    console.log("=== SOAP CREATE SUCCESS ===");
     res.status(201).json({
       success: true,
       message: "SOAP note created successfully",
-      data: soapNote
+      soap: soapNote
     });
+    
   } catch (error) {
-    console.error("Error creating SOAP note:", error);
+    console.error("=== SOAP CREATE ERROR ===", error);
     res.status(500).json({
       success: false,
       message: "Failed to create SOAP note",
@@ -78,7 +97,11 @@ export const createSOAPNote = async (req, res) => {
 export const getSOAPNoteByAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.params;
-    const user = getUserFromToken(req);
+    const user = req.user;
+    
+    console.log("=== SOAP GET START ===");
+    console.log("Appointment ID:", appointmentId);
+    console.log("User:", user?.name, "Role:", user?.role);
     
     if (!user) {
       return res.status(401).json({ 
@@ -87,29 +110,46 @@ export const getSOAPNoteByAppointment = async (req, res) => {
       });
     }
 
-    const soapNote = await SOAPNote.findOne({ appointmentId })
+    console.log("=== SEARCHING FOR SOAP NOTE ===");
+    const soapNote = await SOAP.findOne({ appointmentId })
       .populate('patientId', 'name email')
       .populate('doctorId', 'name email specialization');
+    
+    console.log("=== SOAP NOTE FOUND ===");
+    console.log("SOAP Note:", soapNote);
 
     if (!soapNote) {
-      return res.status(404).json({ 
+      return res.json({ 
         success: false, 
-        message: "SOAP note not found" 
+        message: "No SOAP note found for this appointment" 
       });
     }
 
     // Check authorization
-    if (soapNote.patientId._id.toString() !== user.id && 
-        soapNote.doctorId._id.toString() !== user.id) {
+    console.log("=== AUTHORIZATION CHECK ===");
+    console.log("SOAP Patient ID:", soapNote.patientId._id.toString());
+    console.log("SOAP Doctor ID:", soapNote.doctorId._id.toString());
+    console.log("Current User ID:", user.id);
+    console.log("Current User Role:", user.role);
+    
+    const isPatient = soapNote.patientId._id.toString() === user.id;
+    const isDoctor = soapNote.doctorId._id.toString() === user.id;
+    
+    console.log("Is Patient:", isPatient);
+    console.log("Is Doctor:", isDoctor);
+    
+    if (!isPatient && !isDoctor) {
+      console.log("=== AUTHORIZATION FAILED ===");
       return res.status(403).json({ 
         success: false, 
         message: "Not authorized to view this SOAP note" 
       });
     }
 
+    console.log("=== AUTHORIZATION SUCCESS ===");
     res.json({
       success: true,
-      data: soapNote
+      soap: soapNote
     });
   } catch (error) {
     console.error("Error fetching SOAP note:", error);
@@ -124,7 +164,7 @@ export const getSOAPNoteByAppointment = async (req, res) => {
 // Get all SOAP notes for a doctor
 export const getDoctorSOAPNotes = async (req, res) => {
   try {
-    const user = getUserFromToken(req);
+    const user = req.user;
     
     if (!user) {
       return res.status(401).json({ 
@@ -141,14 +181,14 @@ export const getDoctorSOAPNotes = async (req, res) => {
       query.patientId = patientId;
     }
 
-    const soapNotes = await SOAPNote.find(query)
+    const soapNotes = await SOAP.find(query)
       .populate('patientId', 'name email')
       .populate('appointmentId', 'date time')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await SOAPNote.countDocuments(query);
+    const total = await SOAP.countDocuments(query);
 
     res.json({
       success: true,
@@ -173,7 +213,7 @@ export const getDoctorSOAPNotes = async (req, res) => {
 // Get all SOAP notes for a patient
 export const getPatientSOAPNotes = async (req, res) => {
   try {
-    const user = getUserFromToken(req);
+    const user = req.user;
     
     if (!user) {
       return res.status(401).json({ 
@@ -185,14 +225,14 @@ export const getPatientSOAPNotes = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    const soapNotes = await SOAPNote.find({ patientId: user.id })
+    const soapNotes = await SOAP.find({ patientId: user.id })
       .populate('doctorId', 'name email specialization')
       .populate('appointmentId', 'date time')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await SOAPNote.countDocuments({ patientId: user.id });
+    const total = await SOAP.countDocuments({ patientId: user.id });
 
     res.json({
       success: true,
@@ -219,7 +259,7 @@ export const updateSOAPNote = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    const user = getUserFromToken(req);
+    const user = req.user;
     
     if (!user) {
       return res.status(401).json({ 
@@ -228,7 +268,7 @@ export const updateSOAPNote = async (req, res) => {
       });
     }
 
-    const soapNote = await SOAPNote.findById(id);
+    const soapNote = await SOAP.findById(id);
     if (!soapNote) {
       return res.status(404).json({ 
         success: false, 
@@ -253,7 +293,7 @@ export const updateSOAPNote = async (req, res) => {
     }
 
     // Update SOAP note
-    const updatedSOAPNote = await SOAPNote.findByIdAndUpdate(
+    const updatedSOAPNote = await SOAP.findByIdAndUpdate(
       id,
       { ...updates, updatedAt: new Date() },
       { new: true, runValidators: true }
@@ -278,7 +318,7 @@ export const updateSOAPNote = async (req, res) => {
 export const signSOAPNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = getUserFromToken(req);
+    const user = req.user;
     
     if (!user) {
       return res.status(401).json({ 
@@ -287,7 +327,7 @@ export const signSOAPNote = async (req, res) => {
       });
     }
 
-    const soapNote = await SOAPNote.findById(id);
+    const soapNote = await SOAP.findById(id);
     if (!soapNote) {
       return res.status(404).json({ 
         success: false, 
@@ -304,7 +344,7 @@ export const signSOAPNote = async (req, res) => {
     }
 
     // Sign the SOAP note
-    const signedSOAPNote = await SOAPNote.findByIdAndUpdate(
+    const signedSOAPNote = await SOAP.findByIdAndUpdate(
       id,
       {
         status: 'signed',
@@ -335,7 +375,7 @@ export const signSOAPNote = async (req, res) => {
 export const deleteSOAPNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = getUserFromToken(req);
+    const user = req.user;
     
     if (!user) {
       return res.status(401).json({ 
@@ -344,7 +384,7 @@ export const deleteSOAPNote = async (req, res) => {
       });
     }
 
-    const soapNote = await SOAPNote.findById(id);
+    const soapNote = await SOAP.findById(id);
     if (!soapNote) {
       return res.status(404).json({ 
         success: false, 
@@ -368,7 +408,7 @@ export const deleteSOAPNote = async (req, res) => {
       });
     }
 
-    await SOAPNote.findByIdAndDelete(id);
+    await SOAP.findByIdAndDelete(id);
 
     res.json({
       success: true,

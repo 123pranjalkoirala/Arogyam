@@ -147,7 +147,13 @@ export default function AdminDashboard() {
 
   const updateAppointmentStatus = async (id, status) => {
     try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : { Authorization: "Bearer admin-access-key-pranjal" };
+      const headers = token ? { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      } : { 
+        "Content-Type": "application/json",
+        Authorization: "Bearer admin-access-key-pranjal" 
+      };
       const res = await fetch(`http://localhost:5000/api/admin/appointments/${id}/status`, {
         method: "PUT",
         headers,

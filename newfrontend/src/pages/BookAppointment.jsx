@@ -1,7 +1,7 @@
-// BookAppointment.jsx - Complete Appointment Booking with Payment
+// BookAppointment.jsx - Simple Appointment Booking (No Payment Step)
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Calendar, Clock, User, CreditCard, AlertCircle, CheckCircle } from "lucide-react";
+import { Calendar, Clock, User, AlertCircle, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
 
@@ -19,7 +19,6 @@ export default function BookAppointment() {
     amount: 500 // Default consultation fee
   });
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: Form, 2: Payment, 3: Success
 
   useEffect(() => {
     if (!doctor) {
@@ -36,38 +35,39 @@ export default function BookAppointment() {
       return;
     }
 
-    setStep(2); // Move to payment step
-  };
-
-  const handlePayment = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/payments/initiate-esewa", {
+      
+      // Create appointment request first
+      const appointmentData = {
+        doctorId: formData.doctorId,
+        date: formData.date,
+        time: formData.time,
+        reason: formData.reason,
+        amount: formData.amount
+      };
+
+      const res = await fetch("http://localhost:5000/api/appointments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : {}
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(appointmentData)
       });
 
       const data = await res.json();
       
       if (data.success) {
-        // Navigate to payment page with parameters
-        navigate("/esewa-payment", { 
-          state: { 
-            paymentParams: data.data.formData,
-            appointmentId: data.data.appointmentId
-          } 
-        });
+        toast.success("Appointment request submitted! Waiting for doctor approval.");
+        navigate("/patient-dashboard");
       } else {
-        toast.error(data.message || "Failed to initiate payment");
+        toast.error(data.message || "Failed to submit appointment request");
       }
     } catch (error) {
-      console.error("Payment initiation error:", error);
-      toast.error("Failed to initiate payment");
+      console.error("Appointment booking error:", error);
+      toast.error("Failed to submit appointment request");
     } finally {
       setLoading(false);
     }
@@ -118,136 +118,68 @@ export default function BookAppointment() {
           </div>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              step >= 1 ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600"
-            }`}>
-              1
+        {/* Booking Form */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-6">Appointment Details</h3>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Select Date
+              </label>
+              <input
+                type="date"
+                value={formData.date}
+                min={today}
+                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
             </div>
-            <span className="ml-2 font-medium">Details</span>
-          </div>
-          <div className="w-16 h-1 bg-gray-300 mx-4"></div>
-          <div className="flex items-center">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              step >= 2 ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600"
-            }`}>
-              2
-            </div>
-            <span className="ml-2 font-medium">Payment</span>
-          </div>
-          <div className="w-16 h-1 bg-gray-300 mx-4"></div>
-          <div className="flex items-center">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              step >= 3 ? "bg-green-600 text-white" : "bg-gray-300 text-gray-600"
-            }`}>
-              3
-            </div>
-            <span className="ml-2 font-medium">Confirmation</span>
-          </div>
-        </div>
 
-        {/* Step 1: Appointment Details */}
-        {step === 1 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Appointment Details</h3>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Select Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  min={today}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Clock className="w-4 h-4 inline mr-1" />
-                  Select Time
-                </label>
-                <div className="grid grid-cols-4 gap-3">
-                  {timeSlots.map((time) => (
-                    <button
-                      key={time}
-                      type="button"
-                      onClick={() => setFormData({...formData, time})}
-                      className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-                        formData.time === time
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="w-4 h-4 inline mr-1" />
-                  Reason for Visit
-                </label>
-                <textarea
-                  value={formData.reason}
-                  onChange={(e) => setFormData({...formData, reason: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={4}
-                  placeholder="Please describe your symptoms or reason for appointment..."
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Continue to Payment
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Step 2: Payment */}
-        {step === 2 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Payment Details</h3>
-            
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <span className="text-gray-600">Consultation Fee</span>
-                <span className="text-xl font-bold text-gray-900">Rs. {formData.amount}</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <span className="text-gray-600">Payment Method</span>
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">eSewa</span>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Clock className="w-4 h-4 inline mr-1" />
+                Select Time
+              </label>
+              <div className="grid grid-cols-4 gap-3">
+                {timeSlots.map((time) => (
+                  <button
+                    key={time}
+                    type="button"
+                    onClick={() => setFormData({...formData, time})}
+                    className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                      formData.time === time
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {time}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                <strong>Test Payment:</strong> You will be redirected to eSewa test environment. 
-                Use test credentials for payment processing.
-              </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <User className="w-4 h-4 inline mr-1" />
+                Reason for Visit
+              </label>
+              <textarea
+                value={formData.reason}
+                onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={4}
+                placeholder="Please describe your symptoms or reason for appointment..."
+                required
+              />
             </div>
 
             <button
-              onClick={handlePayment}
+              type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -256,20 +188,13 @@ export default function BookAppointment() {
                 </>
               ) : (
                 <>
-                  <CreditCard className="w-5 h-5" />
-                  Pay with eSewa
+                  <CheckCircle className="w-5 h-5" />
+                  Book Appointment
                 </>
               )}
             </button>
-
-            <button
-              onClick={() => setStep(1)}
-              className="w-full mt-3 bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-            >
-              Back to Details
-            </button>
-          </div>
-        )}
+          </form>
+        </div>
       </div>
     </div>
   );

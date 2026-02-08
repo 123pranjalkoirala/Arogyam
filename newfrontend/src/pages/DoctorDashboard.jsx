@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Search, User, Calendar as CalendarIcon, Star, Bell, Stethoscope, FileText } from "lucide-react";
-import BasicSOAPNotes from "../components/BasicSOAPNotes";
 import ScrollToTop from "../components/ScrollToTop";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -9,6 +8,14 @@ import Navbar from "../components/Navbar";
 export default function DoctorDashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("role");
+  const userName = localStorage.getItem("userName");
+  
+  console.log("=== DOCTOR DASHBOARD DEBUG ===");
+  console.log("Token:", !!token);
+  console.log("User Role:", userRole);
+  console.log("User Name:", userName);
+  
   const [appointments, setAppointments] = useState([]);
   const [activeTab, setActiveTab] = useState("appointments");
   const [profile, setProfile] = useState(null);
@@ -24,8 +31,17 @@ export default function DoctorDashboard() {
       navigate("/login");
       return;
     }
+    
+    if (userRole !== "doctor") {
+      console.log("=== ROLE MISMATCH ===");
+      console.log("Expected: doctor, Got:", userRole);
+      toast.error(`Access denied. This dashboard is for doctors only. Your role: ${userRole}`);
+      navigate(`/${userRole}`);
+      return;
+    }
+    
     loadData();
-  }, []);
+  }, [token, userRole, navigate]);
 
   const loadData = async () => {
     setLoading(true);
@@ -51,7 +67,7 @@ export default function DoctorDashboard() {
 
   const fetchAppointments = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/appointments", {
+      const res = await fetch("http://localhost:5000/api/appointments?status=approved", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -113,20 +129,57 @@ export default function DoctorDashboard() {
 
   const updateStatus = async (id, status) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/appointments/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ status })
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Appointment ${status} successfully`);
-        fetchAppointments();
+      // If marking as completed, ask for SOAP-like information
+      if (status === "completed") {
+        const subjective = prompt("Please enter subjective information (patient's symptoms, complaints):");
+        const objective = prompt("Please enter objective information (examination findings, vitals):");
+        const assessment = prompt("Please enter assessment (diagnosis):");
+        const plan = prompt("Please enter plan (treatment, medications, follow-up):");
+        
+        if (!subjective || !objective || !assessment || !plan) {
+          toast.error("All SOAP fields are required to mark appointment as completed");
+          return;
+        }
+        
+        const res = await fetch(`http://localhost:5000/api/appointments/${id}/complete`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ 
+            status: "completed",
+            soapNotes: {
+              subjective,
+              objective,
+              assessment,
+              plan
+            }
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success("Appointment marked as completed with medical notes");
+          fetchAppointments();
+        } else {
+          toast.error(data.message || "Failed to update status");
+        }
       } else {
-        toast.error(data.message || "Failed to update status");
+        const res = await fetch(`http://localhost:5000/api/appointments/${id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Appointment ${status} successfully`);
+          fetchAppointments();
+        } else {
+          toast.error(data.message || "Failed to update status");
+        }
       }
     } catch (err) {
       toast.error("Failed to update appointment status");
@@ -139,11 +192,26 @@ export default function DoctorDashboard() {
       return;
     }
 
+    // Get SOAP-like information
+    const subjective = prompt("Please enter subjective information (patient's symptoms, complaints):");
+    const objective = prompt("Please enter objective information (examination findings, vitals):");
+    const assessment = prompt("Please enter assessment (diagnosis):");
+    const plan = prompt("Please enter plan (treatment, medications, follow-up):");
+    
+    if (!subjective || !objective || !assessment || !plan) {
+      toast.error("All SOAP fields are required to upload prescription");
+      return;
+    }
+
     const form = new FormData();
     form.append("file", file);
     form.append("patientId", patientId);
     form.append("appointmentId", appointmentId);
-    form.append("title", "Prescription");
+    form.append("title", "Prescription with Medical Notes");
+    form.append("subjective", subjective);
+    form.append("objective", objective);
+    form.append("assessment", assessment);
+    form.append("plan", plan);
 
     try {
       const res = await fetch("http://localhost:5000/api/reports", {
@@ -154,7 +222,7 @@ export default function DoctorDashboard() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success("Prescription uploaded successfully");
+        toast.success("Prescription with medical notes uploaded successfully");
         fetchAppointments();
       } else {
         toast.error(data.message || "Failed to upload prescription");
@@ -227,7 +295,6 @@ export default function DoctorDashboard() {
             <div className="flex border-b border-gray-200 bg-gray-50">
               {[
                 { id: "appointments", label: "Appointments" },
-                { id: "soap", label: "SOAP Notes" },
                 { id: "profile", label: "My Profile" }
               ].map(tab => (
                 <button
@@ -336,15 +403,6 @@ export default function DoctorDashboard() {
 
                                 {a.status === "approved" && (
                                   <>
-                                    <button
-                                      onClick={() => {
-                                        setSelectedAppointment(a);
-                                        setActiveTab("soap");
-                                      }}
-                                      className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-all"
-                                    >
-                                      SOAP Notes
-                                    </button>
                                     <label className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-all cursor-pointer text-center">
                                       Upload Prescription
                                       <input
@@ -378,59 +436,7 @@ export default function DoctorDashboard() {
                 </div>
               )}
 
-              {/* SOAP NOTES TAB */}
-              {activeTab === "soap" && (
-                <div>
-                  <div className="mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Medical Documentation</h2>
-                    <p className="text-gray-600">Create and manage SOAP notes for patient consultations</p>
-                  </div>
-                  
-                  {!selectedAppointment ? (
-                    <div className="bg-gray-50 rounded-xl p-8 text-center">
-                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Select an Appointment</h3>
-                      <p className="text-gray-600 mb-4">Choose an appointment from the Appointments tab to create SOAP notes</p>
-                      <button
-                        onClick={() => setActiveTab("appointments")}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                      >
-                        Go to Appointments
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-semibold text-blue-900">Selected Appointment</h4>
-                            <p className="text-blue-700">
-                              Patient: {selectedAppointment.patientId?.name || "Unknown"} | 
-                              Date: {selectedAppointment.date} | 
-                              Time: {selectedAppointment.time}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => setSelectedAppointment(null)}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            Clear Selection
-                          </button>
-                        </div>
-                      </div>
-                      <BasicSOAPNotes
-                        appointmentId={selectedAppointment._id}
-                        patientId={selectedAppointment.patientId?._id}
-                        onSave={() => {
-                          toast.success("Professional SOAP notes saved successfully");
-                          setSelectedAppointment(null);
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
+              
               {/* PROFILE TAB */}
               {activeTab === "profile" && profile && (
                 <div>
@@ -447,13 +453,24 @@ export default function DoctorDashboard() {
                   </div>
                   <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl">
                     <div className="flex flex-col md:flex-row gap-6 items-start">
-                      <img
-                        src={profile.picture || "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&q=80"}
-                        alt={profile.name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-[#0F9D76]/20 flex-shrink-0"
-                        onError={(e) => e.target.src = "https://i.pravatar.cc/150?img=47"}
-                      />
-                      <div className="flex-1 space-y-3">
+                      {/* Profile Picture */}
+                      <div className="flex-shrink-0">
+                        {profile.picture ? (
+                          <img
+                            src={profile.picture}
+                            alt={profile.name}
+                            className="w-32 h-32 rounded-full object-cover border-4 border-[#0F9D76] flex-shrink-0"
+                            onError={(e) => e.target.src = "https://i.pravatar.cc/150?img=47"}
+                          />
+                        ) : (
+                          <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-[#0F9D76] flex items-center justify-center">
+                            <User className="w-12 h-12 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Profile Information */}
+                      <div className="flex-1 space-y-4">
                         {editingProfile ? (
                           <>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -463,6 +480,15 @@ export default function DoctorDashboard() {
                                   type="text"
                                   value={editForm.name}
                                   onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                  type="email"
+                                  value={editForm.email}
+                                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
                                   className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
                                 />
                               </div>
@@ -494,20 +520,20 @@ export default function DoctorDashboard() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Qualification</label>
-                                <input
-                                  type="text"
-                                  value={editForm.qualification}
-                                  onChange={(e) => setEditForm({...editForm, qualification: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
-                                />
-                              </div>
-                              <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">Consultation Fee (Rs.)</label>
                                 <input
                                   type="number"
                                   value={editForm.consultationFee}
                                   onChange={(e) => setEditForm({...editForm, consultationFee: e.target.value})}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Qualification</label>
+                                <input
+                                  type="text"
+                                  value={editForm.qualification}
+                                  onChange={(e) => setEditForm({...editForm, qualification: e.target.value})}
                                   className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
                                 />
                               </div>
@@ -521,71 +547,157 @@ export default function DoctorDashboard() {
                                 />
                               </div>
                             </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={updateProfile}
-                                className="px-4 py-2 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0d8a66] transition-all"
-                              >
-                                Save Changes
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingProfile(false);
-                                  fetchProfile();
-                                }}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-all"
-                              >
-                                Cancel
-                              </button>
-                            </div>
                           </>
                         ) : (
                           <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div>
-                                <label className="text-xs font-medium text-gray-600">Full Name</label>
-                                <p className="text-sm font-medium text-gray-900">Dr. {profile.name}</p>
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-gray-600">Email Address</label>
-                                <p className="text-sm text-gray-700">{profile.email}</p>
-                              </div>
-                              {profile.specialization && (
-                                <div>
-                                  <label className="text-xs font-medium text-gray-600">Specialization</label>
-                                  <p className="text-sm text-gray-700">{profile.specialization}</p>
-                                </div>
-                              )}
-                              {profile.experience && (
-                                <div>
-                                  <label className="text-xs font-medium text-gray-600">Experience</label>
-                                  <p className="text-sm text-gray-700">{profile.experience} years</p>
-                                </div>
-                              )}
-                              {profile.qualification && (
-                                <div>
-                                  <label className="text-xs font-medium text-gray-600">Qualification</label>
-                                  <p className="text-sm text-gray-700">{profile.qualification}</p>
-                                </div>
-                              )}
-                              {profile.phone && (
-                                <div>
-                                  <label className="text-xs font-medium text-gray-600">Phone</label>
-                                  <p className="text-sm text-gray-700">{profile.phone}</p>
-                                </div>
-                              )}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600">Full Name</label>
+                              <p className="text-sm font-medium text-gray-900">Dr. {profile.name || "Not provided"}</p>
                             </div>
-                            {profile.bio && (
-                              <div>
-                                <label className="text-xs font-medium text-gray-600">Bio</label>
-                                <p className="text-sm text-gray-700">{profile.bio}</p>
-                              </div>
-                            )}
-                          </>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600">Email Address</label>
+                              <p className="text-sm text-gray-700">{profile.email || "Not provided"}</p>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600">Phone Number</label>
+                              <p className="text-sm text-gray-700">{profile.phone || "Not provided"}</p>
+                            </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">Email Address</label>
+                          <p className="text-sm text-gray-700">{profile.email || "Not provided"}</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600">Phone Number</label>
+                          <p className="text-sm text-gray-700">{profile.phone || "Not provided"}</p>
+                        </div>
+
+                        {profile.specialization && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">Specialization</label>
+                            <p className="text-sm text-gray-700">{profile.specialization}</p>
+                          </div>
                         )}
+
+                        {profile.experience && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">Experience</label>
+                            <p className="text-sm text-gray-700">{profile.experience} years</p>
+                          </div>
+                        )}
+
+                        {profile.qualification && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">Qualification</label>
+                            <p className="text-sm text-gray-700">{profile.qualification}</p>
+                          </div>
+                        )}
+
+                        {profile.phone && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">Phone</label>
+                            <p className="text-sm text-gray-700">{profile.phone}</p>
+                          </div>
+                        )}
+
+                        {profile.bio && (
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600">Bio</label>
+                            <p className="text-sm text-gray-700">{profile.bio}</p>
+                          </div>
+                        )}
+                        </>
+                      )}
                       </div>
                     </div>
                   </div>
+
+                  {editingProfile && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl mt-6">
+                      <div className="flex flex-col md:flex-row gap-6 items-start">
+                        <div className="flex-1 space-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                            <input
+                              type="text"
+                              value={editForm.name}
+                              onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                            <input
+                              type="tel"
+                              value={editForm.phone}
+                              onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Specialization</label>
+                            <input
+                              type="text"
+                              value={editForm.specialization}
+                              onChange={(e) => setEditForm({...editForm, specialization: e.target.value})}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Experience (years)</label>
+                            <input
+                              type="number"
+                              value={editForm.experience}
+                              onChange={(e) => setEditForm({...editForm, experience: e.target.value})}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Consultation Fee (Rs.)</label>
+                            <input
+                              type="number"
+                              value={editForm.consultationFee}
+                              onChange={(e) => setEditForm({...editForm, consultationFee: e.target.value})}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                            />
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Bio</label>
+                            <textarea
+                              value={editForm.bio}
+                              onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                              rows={3}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={updateProfile}
+                          className="px-4 py-2 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0d8a66] transition-all"
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingProfile(false);
+                            fetchProfile();
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-all"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

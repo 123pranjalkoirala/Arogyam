@@ -1,16 +1,18 @@
-import { Routes, Route } from "react-router-dom"
-import LandingPage from "./pages/Landingpage"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import RegisterDoctor from "./pages/RegisterDoctor"
-import PatientDashboard from "./pages/PatientDashboard"
-import DoctorDashboard from "./pages/DoctorDashboard"
-import AdminDashboard from "./pages/AdminDashboard"
-import BookAppointment from "./pages/BookAppointment"
-import DoctorSearch from "./pages/DoctorSearch"
-import PaymentSuccess from "./pages/PaymentSuccess"
-import MockPayment from "./pages/MockPayment"
-import Navbar from "./components/Navbar"
+import { Routes, Route } from "react-router-dom";
+import LandingPage from "./pages/Landingpage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import RegisterDoctor from "./pages/RegisterDoctor";
+import PatientDashboard from "./pages/PatientDashboard";
+import DoctorDashboard from "./pages/DoctorDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import BookAppointment from "./pages/BookAppointment";
+import DoctorSearch from "./pages/DoctorSearch";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
+import MockPayment from "./pages/MockPayment";
+import PaymentPage from "./pages/DemoPaymentPage";
+import Navbar from "./components/Navbar";
 
 export default function App() {
   return (
@@ -27,9 +29,10 @@ export default function App() {
         <Route path="/book" element={<BookAppointment />} />
         <Route path="/doctors" element={<DoctorSearch />} />
         <Route path="/payment/mock" element={<MockPayment />} />
+        <Route path="/payment" element={<PaymentPage />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failure" element={<PaymentSuccess />} />
+        <Route path="/payment/failed" element={<PaymentFailed />} />
       </Routes>
     </>
-  )
+  );
 }

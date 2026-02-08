@@ -62,7 +62,6 @@ export default function Navbar() {
               <button onClick={() => scrollTo("specializations")} className="hover:text-[#16A34A] transition-colors">Specialists</button>
               <button onClick={() => scrollTo("features")} className="hover:text-[#16A34A] transition-colors">Features</button>
               <button onClick={() => scrollTo("articles")} className="hover:text-[#16A34A] transition-colors">Health Tips</button>
-              <button onClick={() => scrollTo("quiz")} className="hover:text-[#16A34A] transition-colors">Health Quiz</button>
               <button onClick={() => scrollTo("about")} className="hover:text-[#16A34A] transition-colors">About</button>
               <button onClick={() => scrollTo("contact")} className="hover:text-[#16A34A] transition-colors">Contact</button>
 

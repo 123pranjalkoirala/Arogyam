@@ -1,6 +1,6 @@
-// Notifications.jsx - Real-time Notification System
+// Notifications.jsx - Single Notification Display System
 import { useState, useEffect } from "react";
-import { Bell, X, CheckCircle, Clock, AlertCircle, Calendar } from "lucide-react";
+import { Bell, X, CheckCircle, Clock, AlertCircle, Calendar, User } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Notifications() {
@@ -37,19 +37,24 @@ export default function Notifications() {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.notifications) {
-          const newNotifications = data.notifications.filter(
-            n => !notifications.find(existing => existing._id === n._id)
+          // Create a Set of existing notification IDs for efficient lookup
+          const existingIds = new Set(notifications.map(n => n._id));
+          
+          // Filter out notifications that already exist
+          const trulyNewNotifications = data.notifications.filter(
+            n => !existingIds.has(n._id)
           );
 
-          if (newNotifications.length > 0) {
+          if (trulyNewNotifications.length > 0) {
             // Show toast for new notifications
-            newNotifications.forEach(notification => {
+            trulyNewNotifications.forEach(notification => {
               toast.success(notification.message);
             });
 
-            setNotifications(prev => [...newNotifications, ...prev]);
-            setUnreadCount(prev => prev + newNotifications.length);
-            saveNotifications([...newNotifications, ...notifications]);
+            // Add new notifications to the beginning of the array
+            setNotifications(prev => [...trulyNewNotifications, ...prev]);
+            setUnreadCount(prev => prev + trulyNewNotifications.filter(n => !n.read).length);
+            saveNotifications([...trulyNewNotifications, ...notifications]);
           }
         }
       }

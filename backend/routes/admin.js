@@ -2,6 +2,7 @@ import express from "express";
 import User from "../models/user.js";
 import Appointment from "../models/appointment.js";
 import { requireAuth } from "../middleware/auth.js";
+import { sendAppointmentNotification } from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -10,17 +11,23 @@ const router = express.Router();
 ========================= */
 router.get("/stats", async (req, res) => {
   try {
+    console.log("=== Admin Stats Request ===");
+    console.log("Auth Header:", req.headers.authorization);
+    
     // Check if admin pranjal access
     const authHeader = req.headers.authorization;
     let isAdmin = false;
     
     if (authHeader && authHeader === "Bearer admin-access-key-pranjal") {
       isAdmin = true;
+      console.log("Admin access granted via admin-access-key-pranjal");
     } else if (req.user && req.user.role === "admin") {
       isAdmin = true;
+      console.log("Admin access granted via user role");
     }
     
     if (!isAdmin) {
+      console.log("Admin access denied");
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
@@ -118,17 +125,23 @@ router.get("/stats", async (req, res) => {
 ========================= */
 router.get("/users", async (req, res) => {
   try {
+    console.log("=== Admin Users Request ===");
+    console.log("Auth Header:", req.headers.authorization);
+    
     // Check if admin pranjal access
     const authHeader = req.headers.authorization;
     let isAdmin = false;
     
     if (authHeader && authHeader === "Bearer admin-access-key-pranjal") {
       isAdmin = true;
+      console.log("Admin access granted via admin-access-key-pranjal");
     } else if (req.user && req.user.role === "admin") {
       isAdmin = true;
+      console.log("Admin access granted via user role");
     }
     
     if (!isAdmin) {
+      console.log("Admin access denied");
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
@@ -233,25 +246,35 @@ router.delete("/appointments/:id", async (req, res) => {
 ========================= */
 router.put("/appointments/:id/status", async (req, res) => {
   try {
+    console.log("=== Update Appointment Status Request ===");
+    console.log("Auth Header:", req.headers.authorization);
+    console.log("Request Body:", req.body);
+    console.log("Appointment ID:", req.params.id);
+    
     // Check if admin pranjal access
     const authHeader = req.headers.authorization;
     let isAdmin = false;
     
     if (authHeader && authHeader === "Bearer admin-access-key-pranjal") {
       isAdmin = true;
+      console.log("Admin access granted via admin-access-key-pranjal");
     } else if (req.user && req.user.role === "admin") {
       isAdmin = true;
+      console.log("Admin access granted via user role");
     }
     
     if (!isAdmin) {
+      console.log("Unauthorized access attempt");
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     const { status } = req.body;
     const appointmentId = req.params.id;
     
+    console.log("Updating appointment:", appointmentId, "to status:", status);
+    
     // Get appointment before updating
-    const appointment = await Appointment.findById(appointmentId).populate("patientId");
+    const appointment = await Appointment.findById(appointmentId).populate("patientId").populate("doctorId");
     
     if (!appointment) {
       return res.status(404).json({ success: false, message: "Appointment not found" });
@@ -262,34 +285,64 @@ router.put("/appointments/:id/status", async (req, res) => {
     
     // Create notification for patient
     if (appointment.patientId) {
-      const { createNotification } = await import("./notifications.js");
-      
-      let notificationType, message;
-      switch (status) {
-        case "approved":
-          notificationType = "appointment_approved";
-          message = `Your appointment with Dr. ${appointment.doctorId?.name || "Doctor"} has been approved!`;
-          break;
-        case "rejected":
-          notificationType = "appointment_rejected";
-          message = `Your appointment with Dr. ${appointment.doctorId?.name || "Doctor"} has been rejected.`;
-          break;
-        default:
-          notificationType = "appointment_booked";
-          message = `Your appointment status has been updated to ${status}.`;
+      try {
+        const { createNotification } = await import("./notifications.js");
+        
+        let notificationType, message;
+        switch (status) {
+          case "approved":
+            notificationType = "appointment_approved";
+            message = `Your appointment with Dr. ${appointment.doctorId?.name || "Doctor"} has been approved!`;
+            break;
+          case "rejected":
+            notificationType = "appointment_rejected";
+            message = `Your appointment with Dr. ${appointment.doctorId?.name || "Doctor"} has been rejected.`;
+            break;
+          default:
+            notificationType = "appointment_booked";
+            message = `Your appointment status has been updated to ${status}.`;
+        }
+        
+        await createNotification(
+          appointment.patientId._id,
+          notificationType,
+          message,
+          appointmentId
+        );
+      } catch (notificationError) {
+        console.error("Notification creation failed:", notificationError);
+        // Don't fail the appointment update if notification fails
       }
-      
-      await createNotification(
-        appointment.patientId._id,
-        notificationType,
-        message,
-        appointmentId
-      );
+
+      // Send email notification
+      if (appointment.patientId.email) {
+        try {
+          const appointmentDetails = {
+            doctorName: appointment.doctorId?.name || "Doctor",
+            date: appointment.date,
+            time: appointment.time,
+            reason: appointment.reason
+          };
+          
+          await sendAppointmentNotification(
+            appointment.patientId.email,
+            appointment.patientId.name || "Patient",
+            appointmentDetails,
+            status
+          );
+        } catch (emailError) {
+          console.error("Email notification failed:", emailError);
+          // Don't fail the appointment update if email fails
+        }
+      }
     }
     
     res.json({ success: true, message: `Appointment ${status} successfully` });
+    console.log(`Appointment ${appointmentId} updated to status: ${status}`);
   } catch (err) {
     console.error("Update appointment status error:", err);
+    console.error("Error details:", err.message);
+    console.error("Stack trace:", err.stack);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

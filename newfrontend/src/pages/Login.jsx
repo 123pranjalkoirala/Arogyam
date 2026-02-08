@@ -27,9 +27,18 @@ export default function Login() {
       const data = await res.json();
 
       if (data.success) {
+        console.log("=== LOGIN DEBUG ===");
+        console.log("Backend response:", data);
+        console.log("Role from backend:", data.role);
+        console.log("Name from backend:", data.name);
+        
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
         localStorage.setItem("userName", data.name);
+        
+        console.log("Stored in localStorage - role:", localStorage.getItem("role"));
+        console.log("Navigating to:", `/${data.role}`);
+        
         toast.success("Login successful!");
         navigate(`/${data.role}`);
       } else {
@@ -55,9 +64,18 @@ export default function Login() {
       const data = await res.json();
 
       if (data.success) {
+        console.log("=== GOOGLE LOGIN DEBUG ===");
+        console.log("Backend response:", data);
+        console.log("Role from backend:", data.role);
+        console.log("Name from backend:", data.name);
+        
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
         localStorage.setItem("userName", data.name);
+        
+        console.log("Stored in localStorage - role:", localStorage.getItem("role"));
+        console.log("Navigating to:", `/${data.role}`);
+        
         toast.success("Google login successful!");
         navigate(`/${data.role}`);
       } else {
@@ -73,7 +91,9 @@ export default function Login() {
     let typedKeys = [];
     
     const handleKeyDown = (e) => {
-      typedKeys.push(e.key.toLowerCase());
+      if (e.key && typeof e.key === 'string') {
+        typedKeys.push(e.key.toLowerCase());
+      }
       
       // Keep only last 15 characters to check for "admin pranjal"
       if (typedKeys.length > 15) {

@@ -39,4 +39,40 @@ router.patch("/:id/read", requireAuth, async (req, res) => {
   }
 });
 
+// Delete a notification
+router.delete("/:id", requireAuth, async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndDelete(
+      { _id: req.params.id, userId: req.user.id }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: "Notification not found" });
+    }
+
+    res.json({ success: true, message: "Notification deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Helper function to create notifications
+export const createNotification = async (userId, type, message, appointmentId = null) => {
+  try {
+    const notification = new Notification({
+      userId,
+      type,
+      message,
+      appointmentId
+    });
+    
+    await notification.save();
+    return notification;
+  } catch (error) {
+    console.error("Error creating notification:", error);
+    return null;
+  }
+};
+
 export default router;
