@@ -558,7 +558,7 @@ export default function PatientDashboard() {
                           <span className={`px-6 py-3 rounded-full font-bold text-lg ${
                             apt.status === "approved" ? "bg-green-100 text-green-800" :
                             apt.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                            apt.status === "completed" ? "bg-green-100 text-green-800" :
+                            apt.status === "completed" ? "bg-green-100 text-green-600" :
                             apt.status === "cancelled" ? "bg-red-100 text-red-800" :
                             "bg-gray-100 text-gray-800"
                           }`}>
@@ -644,7 +644,7 @@ export default function PatientDashboard() {
                                   }}
                                   className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-semibold"
                                 >
-                                  🚫 Cancel Appointment
+                                  Cancel Appointment
                                 </button>
                                 <button
                                   onClick={() => {
@@ -653,7 +653,7 @@ export default function PatientDashboard() {
                                   }}
                                   className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
                                 >
-                                  🔄 Reschedule
+                                  Reschedule
                                 </button>
                               </>
                             )}
