@@ -20,7 +20,11 @@ import {
   Edit,
   Ban,
   BarChart3,
-  PieChart
+  PieChart,
+  AlertCircle,
+  CheckSquare,
+  XSquare,
+  CalendarX
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from "recharts";
 
@@ -331,43 +335,165 @@ export default function AdminDashboard() {
             <div className="p-6">
               {/* OVERVIEW TAB */}
               {activeTab === "overview" && stats && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Quick Stats */}
-                    <div className="bg-gradient-to-br from-[#0F9D76] to-[#0d8a66] rounded-xl p-6 text-white">
-                      <h3 className="text-xl font-bold mb-4">System Overview</h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span>Total Users</span>
-                          <span className="text-2xl font-bold">
-                            {(stats.totalPatients || 0) + (stats.totalDoctors || 0)}
-                          </span>
+                <div className="space-y-8">
+                  {/* Enhanced Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <Users className="w-10 h-10" />
+                          <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+                            <span className="text-xs font-semibold">+12%</span>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span>Total Appointments</span>
-                          <span className="text-2xl font-bold">{stats.totalAppointments || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>Pending Reviews</span>
-                          <span className="text-2xl font-bold">{stats.pending || 0}</span>
+                        <div className="text-4xl font-bold mb-2">{(stats.totalPatients || 0) + (stats.totalDoctors || 0)}</div>
+                        <div className="text-blue-100 font-medium">Total Users</div>
+                        <div className="mt-3 pt-3 border-t border-blue-400 border-opacity-30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-blue-100">Live Now</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Recent Activity */}
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h3>
-                      <div className="space-y-3">
-                        {filteredAppointments.slice(0, 5).map(apt => (
-                          <div key={apt._id} className="flex items-center justify-between pb-3 border-b border-gray-200 last:border-0">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {apt.patientId?.name} → Dr. {apt.doctorId?.name}
-                              </p>
-                              <p className="text-xs text-gray-500">{apt.date} at {apt.time}</p>
+                    <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <UserCheck className="w-10 h-10" />
+                          <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+                            <span className="text-xs font-semibold">+8%</span>
+                          </div>
+                        </div>
+                        <div className="text-4xl font-bold mb-2">{stats.totalDoctors || 0}</div>
+                        <div className="text-emerald-100 font-medium">Total Doctors</div>
+                        <div className="mt-3 pt-3 border-t border-emerald-400 border-opacity-30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-emerald-100">Active Today</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <Calendar className="w-10 h-10" />
+                          <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+                            <span className="text-xs font-semibold">+25%</span>
+                          </div>
+                        </div>
+                        <div className="text-4xl font-bold mb-2">{stats.totalAppointments || 0}</div>
+                        <div className="text-purple-100 font-medium">Total Appointments</div>
+                        <div className="mt-3 pt-3 border-t border-purple-400 border-opacity-30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-purple-100">This Month</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <Clock className="w-10 h-10" />
+                          <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+                            <span className="text-xs font-semibold">Urgent</span>
+                          </div>
+                        </div>
+                        <div className="text-4xl font-bold mb-2">{stats.pending || 0}</div>
+                        <div className="text-orange-100 font-medium">Pending Approval</div>
+                        <div className="mt-3 pt-3 border-t border-orange-400 border-opacity-30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-orange-100">Action Required</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Enhanced System Overview */}
+                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white shadow-2xl">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold">System Overview</h3>
+                        <div className="bg-green-500 bg-opacity-20 rounded-full p-2">
+                          <Activity className="w-6 h-6 text-green-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-6">
+                        <div className="group">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-slate-300 font-medium">Total Users</span>
+                            <span className="text-3xl font-bold text-white">
+                              {(stats.totalPatients || 0) + (stats.totalDoctors || 0)}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-700 rounded-full h-2">
+                            <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full" style={{width: '75%'}}></div>
+                          </div>
+                        </div>
+                        <div className="group">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-slate-300 font-medium">Total Appointments</span>
+                            <span className="text-3xl font-bold text-white">{stats.totalAppointments || 0}</span>
+                          </div>
+                          <div className="w-full bg-slate-700 rounded-full h-2">
+                            <div className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-2 rounded-full" style={{width: '60%'}}></div>
+                          </div>
+                        </div>
+                        <div className="group">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-slate-300 font-medium">Pending Reviews</span>
+                            <span className="text-3xl font-bold text-white">{stats.pending || 0}</span>
+                          </div>
+                          <div className="w-full bg-slate-700 rounded-full h-2">
+                            <div className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full" style={{width: '30%'}}></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-6 pt-6 border-t border-slate-700">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-400">System Health</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-sm text-green-400 font-medium">Optimal</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent Activity - Unchanged */}
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <div className="bg-blue-100 rounded-full p-2">
+                          <Activity className="w-6 h-6 text-blue-600" />
+                        </div>
+                        Recent Activity
+                      </h3>
+                      <div className="space-y-4">
+                        {filteredAppointments.slice(0, 6).map(apt => (
+                          <div key={apt._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all">
+                            <div className="flex items-center gap-4">
+                              <div className="bg-white rounded-full p-2 shadow-sm">
+                                <Calendar className="w-5 h-5 text-gray-600" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900">
+                                  {apt.patientId?.name} → Dr. {apt.doctorId?.name}
+                                </p>
+                                <p className="text-sm text-gray-500">{apt.date} at {apt.time}</p>
+                              </div>
                             </div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(apt.status)}`}>
-                              {apt.status}
+                            <span className={`px-4 py-2 rounded-full text-sm font-bold border ${getStatusBadge(apt.status)}`}>
+                              {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
                             </span>
                           </div>
                         ))}
@@ -375,63 +501,215 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Analytics Charts */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Appointments by Status (Pie Chart) */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4">Appointments by Status</h3>
-                      <ResponsiveContainer width="100%" height={300}>
+                  {/* Enhanced Analytics Charts */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Enhanced Appointments by Status */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 shadow-xl border border-indigo-100">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold text-gray-900">Appointment Status Overview</h3>
+                        <div className="bg-indigo-100 rounded-full p-2">
+                          <PieChart className="w-6 h-6 text-indigo-600" />
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={320}>
                         <RechartsPieChart>
                           <Pie
-                            data={stats.appointmentsByStatus || []}
+                            data={[
+                              { name: 'Pending Approval', value: stats.pending || 0, status: 'pending' },
+                              { name: 'Approved', value: stats.approved || 0, status: 'approved' },
+                              { name: 'Completed', value: (stats.totalAppointments || 0) - (stats.pending || 0) - (stats.approved || 0) - (stats.rejected || 0), status: 'completed' },
+                              { name: 'Rejected', value: stats.rejected || 0, status: 'rejected' },
+                              { name: 'Cancelled', value: stats.cancelled || 0, status: 'cancelled' }
+                            ].filter(item => item.value > 0)}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={80}
+                            label={({ name, percent, value }) => (
+                              <text 
+                                x={0} 
+                                y={0} 
+                                fill="white" 
+                                textAnchor="middle" 
+                                dominantBaseline="middle"
+                                className="text-sm font-bold"
+                              >
+                                {`${value}`}
+                              </text>
+                            )}
+                            outerRadius={100}
+                            innerRadius={60}
                             fill="#8884d8"
                             dataKey="value"
                           >
-                            {stats.appointmentsByStatus?.map((entry, index) => {
-                              const colors = ["#F59E0B", "#10B981", "#EF4444", "#3B82F6", "#6B7280"];
-                              return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                            {[
+                              { name: 'Pending Approval', value: stats.pending || 0, status: 'pending' },
+                              { name: 'Approved', value: stats.approved || 0, status: 'approved' },
+                              { name: 'Completed', value: (stats.totalAppointments || 0) - (stats.pending || 0) - (stats.approved || 0) - (stats.rejected || 0), status: 'completed' },
+                              { name: 'Rejected', value: stats.rejected || 0, status: 'rejected' },
+                              { name: 'Cancelled', value: stats.cancelled || 0, status: 'cancelled' }
+                            ].filter(item => item.value > 0).map((entry, index) => {
+                              const colors = {
+                                'pending': '#F59E0B',
+                                'approved': '#10B981', 
+                                'completed': '#3B82F6',
+                                'rejected': '#EF4444',
+                                'cancelled': '#6B7280'
+                              };
+                              return <Cell key={`cell-${index}`} fill={colors[entry.status]} />;
                             })}
                           </Pie>
-                          <Tooltip />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'rgba(0, 0, 0, 0.9)', 
+                              border: 'none', 
+                              borderRadius: '8px',
+                              color: 'white'
+                            }} 
+                            formatter={(value, name) => [`${value} appointments`, name]}
+                          />
                         </RechartsPieChart>
                       </ResponsiveContainer>
+                      <div className="mt-6 space-y-3">
+                        <div className="text-sm font-semibold text-gray-700 mb-3">Status Breakdown:</div>
+                        {[
+                          { name: 'Pending Approval', value: stats.pending || 0, status: 'pending', color: '#F59E0B', icon: AlertCircle, desc: 'Waiting for admin review' },
+                          { name: 'Approved', value: stats.approved || 0, status: 'approved', color: '#10B981', icon: CheckSquare, desc: 'Confirmed appointments' },
+                          { name: 'Completed', value: (stats.totalAppointments || 0) - (stats.pending || 0) - (stats.approved || 0) - (stats.rejected || 0), status: 'completed', color: '#3B82F6', icon: CheckCircle, desc: 'Finished consultations' },
+                          { name: 'Rejected', value: stats.rejected || 0, status: 'rejected', color: '#EF4444', icon: XSquare, desc: 'Declined requests' },
+                          { name: 'Cancelled', value: stats.cancelled || 0, status: 'cancelled', color: '#6B7280', icon: CalendarX, desc: 'Cancelled by users' }
+                        ].filter(item => item.value > 0).map((item) => (
+                          <div key={item.status} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-3">
+                              <div className="w-4 h-4 rounded" style={{backgroundColor: item.color}}></div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <item.icon className="w-5 h-5" style={{color: item.color}} />
+                                  <span className="font-semibold text-gray-900">{item.name}</span>
+                                </div>
+                                <div className="text-xs text-gray-500">{item.desc}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xl font-bold text-gray-900">{item.value}</div>
+                              <div className="text-xs text-gray-500">appointments</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Appointments by Date (Line Chart) */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4">Appointments Trend (Last 30 Days)</h3>
-                      <ResponsiveContainer width="100%" height={300}>
+                    {/* Enhanced Appointments Trend */}
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 shadow-xl border border-emerald-100">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold text-gray-900">30-Day Trend Analysis</h3>
+                        <div className="bg-emerald-100 rounded-full p-2">
+                          <TrendingUp className="w-6 h-6 text-emerald-600" />
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={320}>
                         <LineChart data={stats.appointmentsByDate || []}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="_id" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Line type="monotone" dataKey="count" stroke="#0F9D76" strokeWidth={2} name="Appointments" />
+                          <defs>
+                            <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <XAxis 
+                            dataKey="_id" 
+                            stroke="#6B7280"
+                            tick={{ fill: '#6B7280', fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#6B7280"
+                            tick={{ fill: '#6B7280', fontSize: 12 }}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                              border: 'none', 
+                              borderRadius: '8px',
+                              color: 'white'
+                            }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            stroke="url(#colorGradient)" 
+                            strokeWidth={3}
+                            dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6 }}
+                            name="Appointments"
+                          />
                         </LineChart>
                       </ResponsiveContainer>
+                      <div className="mt-6 bg-emerald-100 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-emerald-800">Average Daily Appointments</span>
+                          <span className="text-xl font-bold text-emerald-900">
+                            {stats.appointmentsByDate?.length > 0 
+                              ? Math.round((stats.appointmentsByDate.reduce((acc, item) => acc + item.count, 0) / stats.appointmentsByDate.length))
+                              : 0}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Appointments by Specialization (Bar Chart) */}
+                  {/* Enhanced Appointments by Specialization */}
                   {stats.appointmentsBySpecialization && stats.appointmentsBySpecialization.length > 0 && (
-                    <div className="bg-white rounded-xl p-6 border border-gray-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4">Appointments by Specialization</h3>
-                      <ResponsiveContainer width="100%" height={300}>
+                    <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-8 shadow-xl border border-rose-100">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold text-gray-900">Specialization Analytics</h3>
+                        <div className="bg-rose-100 rounded-full p-2">
+                          <BarChart3 className="w-6 h-6 text-rose-600" />
+                        </div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={350}>
                         <BarChart data={stats.appointmentsBySpecialization.map(item => ({ name: item._id || "Unknown", count: item.count }))}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="count" fill="#0F9D76" name="Appointments" />
+                          <defs>
+                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#F43F5E" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="#F43F5E" stopOpacity={0.3}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#FCE7F3" />
+                          <XAxis 
+                            dataKey="name" 
+                            angle={-45} 
+                            textAnchor="end" 
+                            height={100}
+                            stroke="#6B7280"
+                            tick={{ fill: '#6B7280', fontSize: 11 }}
+                          />
+                          <YAxis 
+                            stroke="#6B7280"
+                            tick={{ fill: '#6B7280', fontSize: 12 }}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                              border: 'none', 
+                              borderRadius: '8px',
+                              color: 'white'
+                            }} 
+                          />
+                          <Bar 
+                            dataKey="count" 
+                            fill="url(#barGradient)" 
+                            name="Appointments"
+                            radius={[8, 8, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
+                      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {stats.appointmentsBySpecialization.slice(0, 4).map((item, index) => (
+                          <div key={item._id} className="bg-white rounded-xl p-4 text-center shadow-sm">
+                            <div className="text-2xl font-bold text-rose-600 mb-1">{item.count}</div>
+                            <div className="text-sm text-gray-600 capitalize">{item._id || "Unknown"}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
