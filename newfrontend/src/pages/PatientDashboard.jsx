@@ -262,8 +262,13 @@ export default function PatientDashboard() {
         return;
       }
 
-      window.location.href = `/esewa-payment?appointmentId=${createData.appointment._id}`;
-      return;
+      toast.success("Appointment booked successfully! Please wait for approval.");
+      loadAppointments();
+      setSelectedDoctor(null);
+      setBookingDate("");
+      setBookingTime("");
+      setBookingReason("");
+      setActiveTab("appointments");
     } catch (err) {
       console.error("Booking error:", err);
       toast.error("Booking failed. Check connection.");
@@ -280,6 +285,12 @@ export default function PatientDashboard() {
       const appointment = appointments.find(apt => apt._id === appointmentId);
       if (!appointment) {
         toast.error("Appointment not found");
+        return;
+      }
+      
+      // Check if appointment is approved
+      if (appointment.status !== "approved") {
+        toast.error("Please wait for the appointment approval");
         return;
       }
       
@@ -799,7 +810,7 @@ export default function PatientDashboard() {
                       </button>
                       <button
                         onClick={() => setActiveTab("soap-notes")}
-                        className="px-6 py-3 bg-[#43A047] text-white text-lg font-medium rounded-xl hover:bg-[#388E3C] flex items-center gap-2"
+                        className="px-6 py-3 bg-purple-600 text-white text-lg font-medium rounded-xl hover:bg-purple-700 flex items-center gap-2"
                       >
                         View SOAP Notes
                       </button>
