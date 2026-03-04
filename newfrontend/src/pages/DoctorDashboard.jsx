@@ -522,6 +522,19 @@ export default function DoctorDashboard() {
                                     Consultation Completed
                                   </div>
                                 )}
+                                
+                                {/* Display Rating if exists */}
+                                {a.rating && (
+                                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                      <span className="text-sm font-semibold text-gray-900">Patient Rating: {a.rating}/5</span>
+                                    </div>
+                                    {a.review && (
+                                      <p className="text-xs text-gray-600 italic">"{a.review}"</p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>

@@ -114,15 +114,36 @@ export default function PatientDashboard() {
   const loadAppointments = async () => {
     try {
       console.log("=== LOADING APPOINTMENTS ===");
-      const res = await fetch("/api/appointments", {
+      const res = await fetch("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       console.log("Appointments loaded:", data);
       if (data.success) {
         console.log("Raw appointments data:", data.appointments);
-        setAppointments(data.appointments || []);
-        console.log("Appointments set:", data.appointments);
+        
+        // Fetch ratings for completed appointments
+        const appointmentsWithRatings = await Promise.all(
+          (data.appointments || []).map(async (apt) => {
+            if (apt.status === "completed") {
+              try {
+                const ratingRes = await fetch(`/api/ratings/appointment/${apt._id}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                const ratingData = await ratingRes.json();
+                if (ratingData.success && ratingData.rating) {
+                  return { ...apt, rating: ratingData.rating.rating, review: ratingData.rating.review };
+                }
+              } catch (error) {
+                console.log("No rating found for appointment:", apt._id);
+              }
+            }
+            return apt;
+          })
+        );
+        
+        setAppointments(appointmentsWithRatings);
+        console.log("Appointments with ratings set:", appointmentsWithRatings);
       } else {
         console.log("Failed to load appointments:", data.message);
       }
@@ -399,9 +420,18 @@ export default function PatientDashboard() {
       const data = await res.json();
       if (data.success) {
         toast.success("Thank you for your rating!");
+        
+        // Update local state immediately
+        setAppointments(prevAppointments => 
+          prevAppointments.map(apt => 
+            apt._id === selectedAppointmentForRating._id 
+              ? { ...apt, rating: ratingData.rating, review: ratingData.review }
+              : apt
+          )
+        );
+        
         setSelectedAppointmentForRating(null);
         setRatingData({ rating: 0, review: "" });
-        loadAppointments();
       }
     } catch (err) {
       toast.error("Failed to submit rating");
@@ -644,6 +674,45 @@ export default function PatientDashboard() {
                               >
                                 Pay Now - Rs. {apt.amount || 500}
                               </button>
+                            )}
+                            
+                            {/* Rating Button for Completed Appointments */}
+                            {apt.status === "completed" && !apt.rating && (
+                              <button
+                                onClick={() => {
+                                  setSelectedAppointmentForRating(apt);
+                                  setRatingData({ rating: 0, review: "" });
+                                }}
+                                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold flex items-center gap-2"
+                              >
+                                <Star className="w-5 h-5" />
+                                Rate Doctor
+                              </button>
+                            )}
+                            
+                            {/* Display Rating if Already Given */}
+                            {apt.status === "completed" && apt.rating && (
+                              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star
+                                        key={star}
+                                        className={`w-5 h-5 ${
+                                          star <= apt.rating
+                                            ? "text-yellow-500 fill-yellow-500"
+                                            : "text-gray-300"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="font-semibold text-gray-900">Your Rating: {apt.rating}/5</span>
+                                </div>
+                                {apt.review && (
+                                  <p className="mt-2 text-sm text-gray-600 italic">"{apt.review}"</p>
+                                )}
+                                <p className="mt-2 text-xs text-green-600 font-medium">✓ Rating submitted successfully</p>
+                              </div>
                             )}
                             
                             {(apt.status === "approved" || apt.status === "pending") && (
