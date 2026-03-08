@@ -95,14 +95,28 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
-    if (appointment.status !== "pending") {
-      return res.status(400).json({ success: false, message: "Cannot update non-pending appointment" });
+    // Validate status transitions
+    const validTransitions = {
+      "pending": ["approved", "rejected"],
+      "approved": ["completed", "cancelled"],
+      "rejected": [],
+      "completed": [],
+      "cancelled": []
+    };
+    
+    if (!validTransitions[appointment.status]?.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot change status from ${appointment.status} to ${status}` 
+      });
     }
 
     const updateData = { status, updatedAt: new Date() };
     
     if (status === 'approved') {
       updateData.approvedAt = new Date();
+    } else if (status === 'completed') {
+      updateData.completedAt = new Date();
     }
 
     const updatedAppointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
@@ -110,9 +124,11 @@ export const updateAppointmentStatus = async (req, res) => {
     // Send notification to patient
     let notificationMessage = '';
     if (status === 'approved') {
-      notificationMessage = `Your appointment with Dr. ${user.name} on ${date} at ${time} has been approved. Please complete the payment to confirm.`;
+      notificationMessage = `Your appointment with Dr. ${user.name} on ${appointment.date} at ${appointment.time} has been approved. Please complete the payment to confirm.`;
     } else if (status === 'rejected') {
-      notificationMessage = `Your appointment with Dr. ${user.name} on ${date} at ${time} has been rejected.`;
+      notificationMessage = `Your appointment with Dr. ${user.name} on ${appointment.date} at ${appointment.time} has been rejected.`;
+    } else if (status === 'completed') {
+      notificationMessage = `Your appointment with Dr. ${user.name} on ${appointment.date} at ${appointment.time} has been completed. SOAP notes are now available.`;
     }
 
     if (notificationMessage) {
@@ -237,7 +253,7 @@ export const cancelAppointment = async (req, res) => {
     const updatedAppointment = await Appointment.findByIdAndUpdate(id, {
       status: "cancelled",
       cancelledAt: new Date()
-    }, { New: true });
+    }, { new: true });
 
     // Send notification to doctor
     await Notification.create({
@@ -330,7 +346,7 @@ export const checkMissedAppointments = async () => {
     const now = new Date();
     const missedAppointments = await Appointment.find({
       status: 'approved',
-      datetime: { $lt: now }
+      date: { $lt: now.toISOString().split('T')[0] }
     });
 
     for (const appointment of missedAppointments) {
@@ -344,7 +360,7 @@ export const checkMissedAppointments = async () => {
         {
           userId: appointment.patientId,
           title: "Appointment Missed",
-          message: `You missed your appointment on ${new Date(appointment.datetime).toLocaleDateString()}. No refund will be provided.`,
+          message: `You missed your appointment on ${appointment.date}. No refund will be provided.`,
           type: "appointment_missed",
           relatedId: appointment._id,
           read: false
@@ -352,7 +368,7 @@ export const checkMissedAppointments = async () => {
         {
           userId: appointment.doctorId,
           title: "Patient Missed Appointment",
-          message: `Patient missed appointment on ${new Date(appointment.datetime).toLocaleDateString()}`,
+          message: `Patient missed appointment on ${appointment.date}`,
           type: "appointment_missed",
           relatedId: appointment._id,
           read: false
@@ -384,7 +400,7 @@ export const listAppointments = async (req, res) => {
     const appointments = await Appointment.find(query)
       .populate('doctorId', 'name email specialization consultationFee')
       .populate('patientId', 'name email')
-      .sort({ datetime: -1 })
+      .sort({ date: -1, time: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -392,7 +408,7 @@ export const listAppointments = async (req, res) => {
 
     res.json({
       success: true,
-      data: appointments,
+      appointments: appointments,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -402,6 +418,73 @@ export const listAppointments = async (req, res) => {
     });
   } catch (error) {
     console.error("Error listing appointments:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Get appointment statistics
+export const getAppointmentStats = async (req, res) => {
+  try {
+    const user = getUserFromHeader(req);
+    if (!user) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+    let matchQuery = {};
+    if (user.role === 'patient') {
+      matchQuery.patientId = user.id;
+    } else if (user.role === 'doctor') {
+      matchQuery.doctorId = user.id;
+    }
+
+    const stats = await Appointment.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          pending: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "pending"] }, 1, 0]
+            }
+          },
+          approved: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "approved"] }, 1, 0]
+            }
+          },
+          completed: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
+            }
+          },
+          rejected: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "rejected"] }, 1, 0]
+            }
+          },
+          cancelled: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const result = stats[0] || {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      completed: 0,
+      rejected: 0,
+      cancelled: 0
+    };
+
+    res.json({
+      success: true,
+      stats: result
+    });
+  } catch (error) {
+    console.error("Error getting appointment stats:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

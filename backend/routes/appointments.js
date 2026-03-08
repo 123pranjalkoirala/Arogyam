@@ -133,8 +133,7 @@ router.get("/", requireAuth, async (req, res) => {
       console.log("Patient filter:", filter);
     } else if (req.user.role === "doctor") {
       filter.doctorId = req.user.id;
-      // Only show approved appointments to doctors
-      filter.status = "approved";
+      // Remove status filter to show ALL appointments to doctors
       console.log("Doctor filter:", filter);
     }
 
@@ -144,7 +143,7 @@ router.get("/", requireAuth, async (req, res) => {
     const appointments = await Appointment.find(filter)
       .populate("patientId", "name email picture")
       .populate("doctorId", "name specialization email picture consultationFee")
-      .sort({ createdAt: -1 });
+      .sort({ date: -1, time: -1 });
 
     console.log("Appointments found:", appointments.length);
     console.log("=== END GET APPOINTMENTS DEBUG ===");
@@ -200,18 +199,67 @@ router.put("/:id/status", requireAuth, async (req, res) => {
       return res.status(403).json({ success: false, message: "Not your appointment" });
     }
 
-    if (["approved", "rejected", "completed"].includes(status)) {
+    // Validate status transitions
+    const validTransitions = {
+      "pending": ["approved", "rejected"],
+      "approved": ["completed", "cancelled"],
+      "rejected": [],
+      "completed": [],
+      "cancelled": []
+    };
+    
+    if (!validTransitions[appointment.status]?.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot change status from ${appointment.status} to ${status}` 
+      });
+    }
+
+    if (["approved", "rejected", "completed", "cancelled"].includes(status)) {
       appointment.status = status;
+      appointment.updatedAt = new Date();
     }
 
     if (status === "approved") {
       appointment.meetingRoom = `arogyam-${appointment._id}`;
-      // meetingStart will be set when doctor clicks "Start Call"
+      appointment.approvedAt = new Date();
+    } else if (status === "completed") {
+      appointment.completedAt = new Date();
     }
 
     await appointment.save();
+    
+    // Send notification to patient
+    let notificationMessage = '';
+    if (status === 'approved') {
+      notificationMessage = `Your appointment with Dr. ${req.user.name} on ${appointment.date} at ${appointment.time} has been approved. Please complete the payment to confirm.`;
+    } else if (status === 'rejected') {
+      notificationMessage = `Your appointment with Dr. ${req.user.name} on ${appointment.date} at ${appointment.time} has been rejected.`;
+    } else if (status === 'completed') {
+      notificationMessage = `Your appointment with Dr. ${req.user.name} on ${appointment.date} at ${appointment.time} has been completed. SOAP notes are now available.`;
+    }
+
+    if (notificationMessage && appointment.patientId) {
+      try {
+        const Notification = require("../models/Notification.js").default;
+        await Notification.create({
+          recipientId: appointment.patientId,
+          title: `Appointment ${status}`,
+          message: notificationMessage,
+          type: "appointment",
+          relatedId: appointment._id,
+          relatedModel: "Appointment",
+          read: false
+        });
+      } catch (notifError) {
+        console.error("Error sending notification:", notifError);
+        // Don't fail the status update if notification fails
+      }
+    }
+    
     res.json({ success: true, appointment });
   } catch (err) {
+    console.error("Error updating appointment status:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

@@ -64,28 +64,44 @@ export default function DoctorDashboard() {
     }
   };
 
-  useEffect(() => {
-    if (appointments.length > 0) {
-      setStats({
-        total: appointments.length,
-        pending: appointments.filter(a => a.status === "pending").length,
-        approved: appointments.filter(a => a.status === "approved").length,
-        completed: appointments.filter(a => a.status === "completed").length
-      });
-    }
-  }, [appointments]);
-
   const fetchAppointments = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/appointments?paymentStatus=paid", {
+      console.log("=== FETCHING APPOINTMENTS ===");
+      const res = await fetch("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      
+      console.log("Response status:", res.status);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
-      if (data.success) setAppointments(data.appointments || []);
+      console.log("Raw API response:", data);
+      
+      if (data.success && data.appointments) {
+        console.log("Appointments found:", data.appointments.length);
+        setAppointments(data.appointments);
+        
+        // Update stats immediately
+        const stats = {
+          total: data.appointments.length,
+          pending: data.appointments.filter(a => a.status === "pending").length,
+          approved: data.appointments.filter(a => a.status === "approved").length,
+          completed: data.appointments.filter(a => a.status === "completed").length
+        };
+        console.log("Calculated stats:", stats);
+        setStats(stats);
+      } else {
+        console.log("No appointments found or API error");
+        setAppointments([]);
+        setStats({ total: 0, pending: 0, approved: 0, completed: 0 });
+      }
     } catch (err) {
-      console.error("Fetch appointments error:", err);
+      console.error("=== FETCH ERROR ===", err);
       setAppointments([]);
+      setStats({ total: 0, pending: 0, approved: 0, completed: 0 });
     }
   };
 
@@ -139,13 +155,6 @@ export default function DoctorDashboard() {
 
   const updateStatus = async (id, status) => {
     try {
-      if (status === "completed") {
-        const appointment = appointments.find(a => a._id === id);
-        setSelectedAppointment(appointment);
-        setShowSOAPModal(true);
-        return;
-      }
-      
       const res = await fetch(`http://localhost:5000/api/appointments/${id}/status`, {
         method: "PUT",
         headers: {
@@ -158,6 +167,13 @@ export default function DoctorDashboard() {
       if (data.success) {
         toast.success(`Appointment ${status} successfully`);
         fetchAppointments();
+        
+        // If marking as completed, also open SOAP modal for note
+        if (status === "completed") {
+          const appointment = appointments.find(a => a._id === id);
+          setSelectedAppointment(appointment);
+          setShowSOAPModal(true);
+        }
       } else {
         toast.error(data.message || "Failed to update status");
       }
