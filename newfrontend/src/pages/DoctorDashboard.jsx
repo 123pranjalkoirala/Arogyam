@@ -22,7 +22,7 @@ export default function DoctorDashboard() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, completed: 0 });
+  const [stats, setStats] = useState({ total: 0, approved: 0, completed: 0 });
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showSOAPModal, setShowSOAPModal] = useState(false);
@@ -87,7 +87,6 @@ export default function DoctorDashboard() {
         // Update stats immediately
         const stats = {
           total: data.appointments.length,
-          pending: data.appointments.filter(a => a.status === "pending").length,
           approved: data.appointments.filter(a => a.status === "approved").length,
           completed: data.appointments.filter(a => a.status === "completed").length
         };
@@ -96,12 +95,12 @@ export default function DoctorDashboard() {
       } else {
         console.log("No appointments found or API error");
         setAppointments([]);
-        setStats({ total: 0, pending: 0, approved: 0, completed: 0 });
+        setStats({ total: 0, approved: 0, completed: 0 });
       }
     } catch (err) {
       console.error("=== FETCH ERROR ===", err);
       setAppointments([]);
-      setStats({ total: 0, pending: 0, approved: 0, completed: 0 });
+      setStats({ total: 0, approved: 0, completed: 0 });
     }
   };
 
@@ -372,14 +371,10 @@ export default function DoctorDashboard() {
           </div>
 
           {/* Stats Cards - Premium */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
               <div className="text-3xl font-bold text-[#0F9D76] mb-1">{stats.total}</div>
               <div className="text-sm text-gray-600 font-medium">Total Appointments</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-              <div className="text-3xl font-bold text-yellow-600 mb-1">{stats.pending}</div>
-              <div className="text-sm text-gray-600 font-medium">Pending</div>
             </div>
             <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
               <div className="text-3xl font-bold text-green-600 mb-1">{stats.approved}</div>
@@ -421,7 +416,7 @@ export default function DoctorDashboard() {
                     
                     {/* Filter */}
                     <div className="flex flex-wrap gap-2">
-                      {["all", "pending", "approved", "completed"].map(status => (
+                      {["all", "approved", "completed"].map(status => (
                         <button
                           key={status}
                           onClick={() => setFilterStatus(status)}
@@ -485,23 +480,6 @@ export default function DoctorDashboard() {
                               </span>
                               
                               <div className="flex flex-wrap gap-2">
-                                {a.status === "pending" && (
-                                  <>
-                                    <button
-                                      onClick={() => updateStatus(a._id, "approved")}
-                                      className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-all"
-                                    >
-                                      Accept
-                                    </button>
-                                    <button
-                                      onClick={() => updateStatus(a._id, "rejected")}
-                                      className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all"
-                                    >
-                                      Reject
-                                    </button>
-                                  </>
-                                )}
-
                                 {a.status === "approved" && (
                                   <>
                                     <button
@@ -531,12 +509,6 @@ export default function DoctorDashboard() {
                                       </button>
                                     )}
                                   </>
-                                )}
-
-                                {a.status === "completed" && (
-                                  <div className="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium">
-                                    Consultation Completed
-                                  </div>
                                 )}
                                 
                                 {/* Display Rating if exists */}

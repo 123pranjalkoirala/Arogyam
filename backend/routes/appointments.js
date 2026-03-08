@@ -22,8 +22,8 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    const { doctorId, date, time, reason, paymentId, amount } = req.body;
-    console.log("Extracted data:", { doctorId, date, time, reason, paymentId, amount });
+    const { doctorId, date, time, reason, paymentId, transactionId, amount } = req.body;
+    console.log("Extracted data:", { doctorId, date, time, reason, paymentId, transactionId, amount });
     console.log("Typeof reason:", typeof reason);
     console.log("Reason value:", reason);
 
@@ -39,22 +39,32 @@ router.post("/", requireAuth, async (req, res) => {
       date,
       time,
       reason,
-      status: "pending",
-      paymentStatus: "pending", // Payment pending (matches schema default)
       amount: amount || 500
     });
 
-    // Create appointment with pending status (waiting for doctor approval)
-    const appointment = await Appointment.create({
+    // Create appointment with status based on payment
+    const appointmentData = {
       patientId: req.user.id,
       doctorId,
       date,
       time,
       reason,
-      status: "pending", // Waiting for doctor approval
-      paymentStatus: "pending", // Payment pending (matches schema default)
-      amount: amount || 500 // Default consultation fee
-    });
+      amount: amount || 500
+    };
+
+    // If payment is already made, set status to approved, otherwise pending
+    if (paymentId && transactionId) {
+      appointmentData.status = "approved";
+      appointmentData.paymentStatus = "paid";
+      appointmentData.eSewaTransactionId = transactionId;
+      appointmentData.paymentDate = new Date();
+      appointmentData.approvedAt = new Date();
+    } else {
+      appointmentData.status = "pending";
+      appointmentData.paymentStatus = "pending";
+    }
+
+    const appointment = await Appointment.create(appointmentData);
 
     console.log("Appointment created successfully:", appointment);
 
@@ -105,9 +115,18 @@ router.post("/after-payment", async (req, res) => {
       return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
+    // Update payment status and appointment status
     appointment.paymentStatus = "paid";
     appointment.eSewaTransactionId = transactionId;
     appointment.paymentDate = new Date();
+    
+    // If appointment was pending, approve it now that payment is made
+    if (appointment.status === "pending") {
+      appointment.status = "approved";
+      appointment.approvedAt = new Date();
+      appointment.meetingRoom = `arogyam-${appointment._id}`;
+    }
+    
     await appointment.save();
 
     res.json({ success: true, appointment });
@@ -133,7 +152,8 @@ router.get("/", requireAuth, async (req, res) => {
       console.log("Patient filter:", filter);
     } else if (req.user.role === "doctor") {
       filter.doctorId = req.user.id;
-      // Remove status filter to show ALL appointments to doctors
+      // Only show PAID appointments to doctors
+      filter.paymentStatus = "paid";
       console.log("Doctor filter:", filter);
     }
 
