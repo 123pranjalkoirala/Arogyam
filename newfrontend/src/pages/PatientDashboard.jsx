@@ -36,10 +36,7 @@ export default function PatientDashboard() {
   const [appointmentFilter, setAppointmentFilter] = useState("all");
   const [soapNotes, setSoapNotes] = useState([]);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [rescheduleDate, setRescheduleDate] = useState("");
-  const [rescheduleTime, setRescheduleTime] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -464,41 +461,6 @@ export default function PatientDashboard() {
     }
   };
 
-  const handleRescheduleAppointment = async () => {
-    if (!selectedAppointment || !rescheduleDate || !rescheduleTime) {
-      toast.error("Please select new date and time");
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/appointments/${selectedAppointment._id}/reschedule`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          date: rescheduleDate,
-          time: rescheduleTime,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Appointment rescheduled successfully");
-        setShowRescheduleModal(false);
-        setSelectedAppointment(null);
-        setRescheduleDate("");
-        setRescheduleTime("");
-        loadAppointments();
-      } else {
-        toast.error(data.message || "Failed to reschedule appointment");
-      }
-    } catch (err) {
-      toast.error("Failed to reschedule appointment");
-    }
-  };
-
   const filteredDoctors = doctors.filter(
     (doc) =>
       doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -518,8 +480,8 @@ export default function PatientDashboard() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
 
-        <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
+        <div className="w-full px-6 py-8 pt-24">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
             {/* Sidebar */}
             <aside className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -560,12 +522,12 @@ export default function PatientDashboard() {
             </aside>
 
             {/* Main Content */}
-            <main className="lg:col-span-3">
+            <main className="lg:col-span-4">
               {/* Overview */}
               {activeTab === "overview" && (
                 <div className="bg-white rounded-2xl shadow-xl p-10">
                   <h2 className="text-4xl font-bold mb-10">Dashboard Overview</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                     <div className="bg-gradient-to-br from-[#0F9D76]/10 to-green-50 p-8 rounded-2xl">
                       <p className="text-gray-700 text-xl mb-4">Upcoming Appointments</p>
                       <p className="text-5xl font-bold text-[#0F9D76]">
@@ -715,29 +677,7 @@ export default function PatientDashboard() {
                               </div>
                             )}
                             
-                            {(apt.status === "approved" || apt.status === "pending") && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setSelectedAppointment(apt);
-                                    setShowCancelModal(true);
-                                  }}
-                                  className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-semibold"
-                                >
-                                  Cancel Appointment
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSelectedAppointment(apt);
-                                    setShowRescheduleModal(true);
-                                  }}
-                                  className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
-                                >
-                                  Reschedule
-                                </button>
-                              </>
-                            )}
-                          </div>
+                                                      </div>
                           
                           {apt.status === "approved" && apt.paymentStatus !== "paid" && (
                             <div className="mt-4">
@@ -772,7 +712,7 @@ export default function PatientDashboard() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-12">
                     {filteredDoctors.length === 0 ? (
                       <p className="col-span-full text-center text-gray-500 text-2xl py-16">No doctors found</p>
                     ) : (
@@ -1388,69 +1328,6 @@ export default function PatientDashboard() {
                 className="flex-1 py-4 bg-gray-200 text-gray-700 text-xl font-bold rounded-2xl hover:bg-gray-300"
               >
                 Keep Appointment
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reschedule Appointment Modal */}
-      {showRescheduleModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-3xl p-10 max-w-2xl w-full">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-3xl font-bold text-blue-600">Reschedule Appointment</h3>
-              <button onClick={() => setShowRescheduleModal(false)}>
-                <X className="w-8 h-8 text-gray-500 hover:text-gray-700" />
-              </button>
-            </div>
-
-            <div className="mb-8">
-              <p className="text-xl text-gray-700 mb-4">
-                Reschedule your appointment with:
-              </p>
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <p className="font-bold text-lg">Dr. {selectedAppointment.doctorId?.name}</p>
-                <p className="text-gray-600">Current: {selectedAppointment.date} at {selectedAppointment.time}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
-                <label className="block text-lg font-medium mb-3">New Date</label>
-                <input
-                  type="date"
-                  value={rescheduleDate}
-                  onChange={(e) => setRescheduleDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-6 py-4 border-2 rounded-xl text-lg focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-lg font-medium mb-3">New Time</label>
-                <input
-                  type="time"
-                  value={rescheduleTime}
-                  onChange={(e) => setRescheduleTime(e.target.value)}
-                  className="w-full px-6 py-4 border-2 rounded-xl text-lg focus:border-blue-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleRescheduleAppointment}
-                className="flex-1 py-4 bg-blue-500 text-white text-xl font-bold rounded-2xl hover:bg-blue-600"
-              >
-                Reschedule Appointment
-              </button>
-              <button
-                onClick={() => setShowRescheduleModal(false)}
-                className="flex-1 py-4 bg-gray-200 text-gray-700 text-xl font-bold rounded-2xl hover:bg-gray-300"
-              >
-                Cancel
               </button>
             </div>
           </div>

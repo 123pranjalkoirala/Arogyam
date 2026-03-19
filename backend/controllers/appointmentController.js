@@ -53,17 +53,6 @@ export const createAppointment = async (req, res) => {
       paymentStatus: "pending"
     });
 
-    // Send notification to doctor
-    await Notification.create({
-      recipientId: doctorId,
-      title: "New Appointment Request",
-      message: `${user.name} has requested an appointment on ${date} at ${time}`,
-      type: "appointment",
-      relatedId: apt._id,
-      relatedModel: "Appointment",
-      read: false
-    });
-
     res.status(201).json({ 
       success: true, 
       message: "Appointment request submitted. Please wait for doctor approval.",
@@ -120,28 +109,6 @@ export const updateAppointmentStatus = async (req, res) => {
     }
 
     const updatedAppointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
-
-    // Send notification to patient
-    let notificationMessage = '';
-    if (status === 'approved') {
-      notificationMessage = `Your appointment with Dr. ${user.name} on ${appointment.date} at ${appointment.time} has been approved. Please complete the payment to confirm.`;
-    } else if (status === 'rejected') {
-      notificationMessage = `Your appointment with Dr. ${user.name} on ${appointment.date} at ${appointment.time} has been rejected.`;
-    } else if (status === 'completed') {
-      notificationMessage = `Your appointment with Dr. ${user.name} on ${appointment.date} at ${appointment.time} has been completed. SOAP notes are now available.`;
-    }
-
-    if (notificationMessage) {
-      await Notification.create({
-        recipientId: appointment.patientId,
-        title: `Appointment ${status}`,
-        message: notificationMessage,
-        type: "appointment",
-        relatedId: id,
-        relatedModel: "Appointment",
-        read: false
-      });
-    }
 
     res.json({ 
       success: true, 
@@ -206,17 +173,6 @@ export const completeAppointment = async (req, res) => {
       completedAt: new Date()
     }, { new: true });
 
-    // Send notification to patient
-    await Notification.create({
-      recipientId: appointment.patientId,
-      title: "Appointment Completed",
-      message: `Your consultation with Dr. ${user.name} has been completed. SOAP notes and prescription are now available.`,
-      type: "appointment",
-      relatedId: id,
-      relatedModel: "Appointment",
-      read: false
-    });
-
     res.json({ 
       success: true, 
       message: "Appointment completed successfully",
@@ -254,17 +210,6 @@ export const cancelAppointment = async (req, res) => {
       status: "cancelled",
       cancelledAt: new Date()
     }, { new: true });
-
-    // Send notification to doctor
-    await Notification.create({
-      recipientId: appointment.doctorId,
-      title: "Appointment Cancelled",
-      message: `Patient ${user.name} has cancelled their appointment on ${appointment.date} at ${appointment.time}`,
-      type: "appointment",
-      relatedId: id,
-      relatedModel: "Appointment",
-      read: false
-    });
 
     res.json({ 
       success: true, 
@@ -317,17 +262,6 @@ export const rescheduleAppointment = async (req, res) => {
       time,
       rescheduledAt: new Date()
     }, { new: true });
-
-    // Send notification to doctor
-    await Notification.create({
-      recipientId: appointment.doctorId,
-      title: "Appointment Rescheduled",
-      message: `Patient ${user.name} has rescheduled their appointment to ${date} at ${time}`,
-      type: "appointment",
-      relatedId: id,
-      relatedModel: "Appointment",
-      read: false
-    });
 
     res.json({ 
       success: true, 

@@ -168,19 +168,6 @@ export const initiateEsewaPayment = async (req, res) => {
         console.log("Signature String:", `total_amount=${totalAmountFormatted},transaction_uuid=${transactionUuid},product_code=${ESEWA_PRODUCT_CODE}`);
         console.log("Generated Signature:", signature);
 
-        // Send notification to doctor
-        try {
-            await Notification.create({
-                userId: doctorId,
-                type: "appointment_payment",
-                title: "Payment Initiated",
-                message: `Payment initiated for appointment on ${date} at ${time}.`,
-                read: false
-            });
-        } catch (notificationError) {
-            console.error("Error sending notification:", notificationError);
-        }
-
         res.status(200).json({
             success: true,
             message: "Payment initiated successfully",
@@ -293,27 +280,6 @@ export const esewaPaymentCallback = async (req, res) => {
             console.log("=== PAYMENT SUCCESSFUL ===");
             console.log("Appointment updated:", appointment._id);
 
-            // Send notifications
-            try {
-                await Notification.create({
-                    userId: appointment.patientId,
-                    type: "payment_success",
-                    title: "Payment Successful",
-                    message: `Payment of Rs. ${total_amount} for your appointment on ${appointment.date} has been successful.`,
-                    read: false
-                });
-
-                await Notification.create({
-                    userId: appointment.doctorId,
-                    type: "appointment_payment",
-                    title: "Payment Received",
-                    message: `Payment received for appointment on ${appointment.date}.`,
-                    read: false
-                });
-            } catch (notificationError) {
-                console.error("Error sending notifications:", notificationError);
-            }
-
             return res.redirect(`${CLIENT_URL}/payment-success?appointmentId=${appointment._id}`);
 
         } else if (status === "FAILED") {
@@ -322,19 +288,6 @@ export const esewaPaymentCallback = async (req, res) => {
                 paymentStatus: "failed",
                 status: "pending"
             });
-
-            // Send notification to patient
-            try {
-                await Notification.create({
-                    userId: appointment.patientId,
-                    type: "payment_failed",
-                    title: "Payment Failed",
-                    message: "Your payment could not be processed. Please try again.",
-                    read: false
-                });
-            } catch (notificationError) {
-                console.error("Error sending notification:", notificationError);
-            }
 
             return res.redirect(`${CLIENT_URL}/payment-failed?appointmentId=${appointment._id}`);
 

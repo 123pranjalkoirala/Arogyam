@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Search, User, Calendar as CalendarIcon, Star, Bell, Stethoscope, FileText, X, Plus } from "lucide-react";
 import ScrollToTop from "../components/ScrollToTop";
 import { useNavigate } from "react-router-dom";
@@ -382,6 +381,10 @@ export default function DoctorDashboard() {
             <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
               <div className="text-3xl font-bold text-blue-600 mb-1">{stats.completed}</div>
               <div className="text-sm text-gray-600 font-medium">Completed</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+              <div className="text-3xl font-bold text-purple-600 mb-1">{stats.total - stats.completed}</div>
+              <div className="text-sm text-gray-600 font-medium">Pending</div>
             </div>
           </div>
 
@@ -788,7 +791,10 @@ export default function DoctorDashboard() {
               )}
             </div>
           </div>
-        </div>{/* SOAP Note Modal */}
+        </div>
+      </div>
+      
+      {/* SOAP Note Modal */}
       {showSOAPModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -991,4 +997,3 @@ export default function DoctorDashboard() {
       <ScrollToTop />
     </div>
   );
-}

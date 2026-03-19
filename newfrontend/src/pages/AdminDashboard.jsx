@@ -13,6 +13,7 @@ import {
   Activity,
   CheckCircle,
   XCircle,
+  X,
   Clock,
   Search,
   Trash2,
@@ -38,6 +39,10 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [userFilter, setUserFilter] = useState("all");
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
 
   useEffect(() => {
     // Load data regardless of token (for admin pranjal access)
@@ -67,6 +72,10 @@ export default function AdminDashboard() {
         headers
       });
       const data = await res.json();
+      console.log("=== Admin Stats Response ===");
+      console.log("Full response:", data);
+      console.log("Total Revenue:", data.totalRevenue);
+      console.log("Revenue by Month:", data.revenueByMonth);
       if (data.success) {
         setStats(data);
       }
@@ -149,6 +158,63 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRescheduleAppointment = async () => {
+    if (!selectedAppointment || !rescheduleDate || !rescheduleTime) {
+      toast.error("Please select new date and time");
+      return;
+    }
+
+    try {
+      const headers = { 
+        "Content-Type": "application/json",
+        Authorization: "Bearer admin-access-key-pranjal"
+      };
+      
+      console.log("=== Frontend Reschedule Debug ===");
+      console.log("Appointment ID:", selectedAppointment._id);
+      console.log("New Date:", rescheduleDate);
+      console.log("New Time:", rescheduleTime);
+      console.log("Auth Header:", headers.Authorization);
+      
+      const res = await fetch(`http://localhost:5000/api/admin/appointments/${selectedAppointment._id}/reschedule`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          date: rescheduleDate,
+          time: rescheduleTime,
+        }),
+      });
+
+      const data = await res.json();
+      console.log("=== Backend Response ===");
+      console.log("Status:", res.status);
+      console.log("Response:", data);
+      
+      if (data.success) {
+        toast.success("Appointment rescheduled successfully");
+        setShowRescheduleModal(false);
+        setSelectedAppointment(null);
+        setRescheduleDate("");
+        setRescheduleTime("");
+        
+        // Update the appointment in the local state with new date and time
+        setAppointments(prevAppointments => 
+          prevAppointments.map(apt => 
+            apt._id === selectedAppointment._id 
+              ? { ...apt, date: rescheduleDate, time: rescheduleTime }
+              : apt
+          )
+        );
+        
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error(data.message || "Failed to reschedule appointment");
+      }
+    } catch (err) {
+      toast.error("Failed to reschedule appointment");
+    }
+  };
+
   const updateAppointmentStatus = async (id, status) => {
     try {
       const headers = token ? { 
@@ -183,7 +249,11 @@ export default function AdminDashboard() {
     return matchesSearch && matchesFilter;
   });
 
-  const filteredAppointments = appointments.slice(0, 20);
+  // Remove duplicates and show unique appointments
+  const uniqueAppointments = appointments.filter((apt, index, self) => 
+    index === self.findIndex((t) => t._id === apt._id)
+  );
+  const filteredAppointments = uniqueAppointments.slice(0, 20);
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -712,6 +782,84 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
+
+                  {/* Revenue Chart - Paid Appointments */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 shadow-xl border border-green-100">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">Revenue Analytics</h3>
+                        <p className="text-sm text-gray-600 mt-1">Total revenue from all paid appointments</p>
+                      </div>
+                      <div className="bg-green-100 rounded-full p-2">
+                        <DollarSign className="w-6 h-6 text-green-600" />
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={stats.revenueByMonth || []}>
+                        <defs>
+                          <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#10B981" stopOpacity={0.3}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                        <XAxis 
+                          dataKey="month" 
+                          stroke="#6B7280"
+                          tick={{ fill: '#6B7280', fontSize: 12 }}
+                        />
+                        <YAxis 
+                          stroke="#6B7280"
+                          tick={{ fill: '#6B7280', fontSize: 12 }}
+                          tickFormatter={(value) => `Rs. ${value}`}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                            border: 'none', 
+                            borderRadius: '8px',
+                            color: 'white'
+                          }} 
+                          formatter={(value) => [`Rs. ${value?.toLocaleString() || 0}`, 'Revenue']}
+                          labelFormatter={(label) => `Month: ${label}`}
+                        />
+                        <Bar 
+                          dataKey="revenue" 
+                          fill="url(#revenueGradient)" 
+                          radius={[8, 8, 0, 0]}
+                          name="Revenue"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-green-100 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-sm font-medium text-green-800">Total Revenue</span>
+                            <p className="text-2xl font-bold text-green-900 mt-1">
+                              Rs. {stats.totalRevenue?.toLocaleString() || 0}
+                            </p>
+                          </div>
+                          <div className="bg-green-200 rounded-full p-3">
+                            <DollarSign className="w-6 h-6 text-green-700" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-blue-100 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-sm font-medium text-blue-800">Completed & Paid Appointments</span>
+                            <p className="text-2xl font-bold text-blue-900 mt-1">
+                              {stats.completedAndPaidCount || 0}
+                            </p>
+                          </div>
+                          <div className="bg-blue-200 rounded-full p-3">
+                            <CheckCircle className="w-6 h-6 text-blue-700" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -850,20 +998,27 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-4 py-4">
                               <div className="flex gap-2">
-                                <button
-                                  onClick={() => updateAppointmentStatus(apt._id, "approved")}
-                                  className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-all flex items-center gap-1"
-                                >
-                                  <CheckCircle className="w-3 h-3" />
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => updateAppointmentStatus(apt._id, "rejected")}
-                                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all flex items-center gap-1"
-                                >
-                                  <XCircle className="w-3 h-3" />
-                                  Reject
-                                </button>
+                                {apt.status !== "approved" && apt.status !== "completed" && apt.status !== "rejected" && (
+                                  <button
+                                    onClick={() => updateAppointmentStatus(apt._id, "approved")}
+                                    className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-all flex items-center gap-1"
+                                  >
+                                    <CheckCircle className="w-3 h-3" />
+                                    Approve
+                                  </button>
+                                )}
+                                {apt.status !== "completed" && apt.status !== "rejected" && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedAppointment(apt);
+                                      setShowRescheduleModal(true);
+                                    }}
+                                    className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-all flex items-center gap-1"
+                                  >
+                                    <CalendarX className="w-3 h-3" />
+                                    Reschedule
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => deleteAppointment(apt._id)}
                                   className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-xs font-medium hover:bg-gray-600 transition-all flex items-center gap-1"
@@ -891,6 +1046,69 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Reschedule Appointment Modal */}
+      {showRescheduleModal && selectedAppointment && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-3xl p-10 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-3xl font-bold text-blue-600">Reschedule Appointment</h3>
+              <button onClick={() => setShowRescheduleModal(false)}>
+                <X className="w-8 h-8 text-gray-500 hover:text-gray-700" />
+              </button>
+            </div>
+
+            <div className="mb-8">
+              <p className="text-xl text-gray-700 mb-4">Reschedule appointment for:</p>
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <p className="font-bold text-lg">Patient: {selectedAppointment.patientId?.name}</p>
+                <p className="text-xl text-gray-600">Doctor: Dr. {selectedAppointment.doctorId?.name}</p>
+                <p className="text-xl text-gray-600">Current: {selectedAppointment.date} at {selectedAppointment.time}</p>
+                <p className="text-xl text-gray-600">Reason: {selectedAppointment.reason || "Not specified"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <label className="block text-lg font-medium mb-3">New Date</label>
+                <input
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full px-6 py-4 border-2 rounded-xl text-lg focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-lg font-medium mb-3">New Time</label>
+                <input
+                  type="time"
+                  value={rescheduleTime}
+                  onChange={(e) => setRescheduleTime(e.target.value)}
+                  className="w-full px-6 py-4 border-2 rounded-xl text-lg focus:border-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleRescheduleAppointment}
+                className="flex-1 py-4 bg-blue-500 text-white text-xl font-bold rounded-2xl hover:bg-blue-600"
+              >
+                Reschedule Appointment
+              </button>
+              <button
+                onClick={() => setShowRescheduleModal(false)}
+                className="flex-1 py-4 bg-gray-200 text-gray-700 text-xl font-bold rounded-2xl hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scroll to Top Button */}
       <ScrollToTop />

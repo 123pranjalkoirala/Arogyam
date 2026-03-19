@@ -249,34 +249,6 @@ router.put("/:id/status", requireAuth, async (req, res) => {
 
     await appointment.save();
     
-    // Send notification to patient
-    let notificationMessage = '';
-    if (status === 'approved') {
-      notificationMessage = `Your appointment with Dr. ${req.user.name} on ${appointment.date} at ${appointment.time} has been approved. Please complete the payment to confirm.`;
-    } else if (status === 'rejected') {
-      notificationMessage = `Your appointment with Dr. ${req.user.name} on ${appointment.date} at ${appointment.time} has been rejected.`;
-    } else if (status === 'completed') {
-      notificationMessage = `Your appointment with Dr. ${req.user.name} on ${appointment.date} at ${appointment.time} has been completed. SOAP notes are now available.`;
-    }
-
-    if (notificationMessage && appointment.patientId) {
-      try {
-        const Notification = require("../models/Notification.js").default;
-        await Notification.create({
-          recipientId: appointment.patientId,
-          title: `Appointment ${status}`,
-          message: notificationMessage,
-          type: "appointment",
-          relatedId: appointment._id,
-          relatedModel: "Appointment",
-          read: false
-        });
-      } catch (notifError) {
-        console.error("Error sending notification:", notifError);
-        // Don't fail the status update if notification fails
-      }
-    }
-    
     res.json({ success: true, appointment });
   } catch (err) {
     console.error("Error updating appointment status:", err);

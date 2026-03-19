@@ -89,21 +89,6 @@ const createAppointmentFromPaymentData = async (appointmentData, userId) => {
     
     await appointment.populate('patientId doctorId');
     
-    try {
-        const notification = await Notification.create({
-            recipientId: doctorId,
-            type: 'appointment',
-            title: 'New Appointment Scheduled',
-            message: `You have a new appointment with ${appointment.patientId.name} on ${date} at ${time}`,
-            relatedId: appointment._id,
-            relatedModel: 'Appointment'
-        });
-        
-        console.log('Notification sent to doctor:', notification);
-    } catch (notificationError) {
-        console.error('Error creating notification:', notificationError);
-    }
-
     return appointment;
 };
 
@@ -205,21 +190,6 @@ export const initiateEsewaPayment = async (req, res) => {
             console.log(`  ${key}: ${value}`);
         });
 
-        // Send notification to doctor about new appointment request
-        try {
-            await Notification.create({
-                recipientId: doctorId,
-                title: "New Appointment Request",
-                message: `A new appointment request has been submitted for ${date} at ${time}`,
-                type: "appointment",
-                relatedId: appointment._id,
-                relatedModel: "Appointment",
-                read: false
-            });
-        } catch (notificationError) {
-            console.error("Error sending notification:", notificationError);
-        }
-
         res.status(200).json({
             success: true,
             message: "Payment initiated successfully",
@@ -305,33 +275,6 @@ export const esewaPaymentCallback = async (req, res) => {
         await appointment.save();
 
         console.log("Payment successful for appointment:", appointment._id);
-
-        // Send notifications
-        try {
-            // Notify patient
-            await Notification.create({
-                recipientId: appointment.patientId,
-                title: "Payment Successful",
-                message: `Your payment of Rs. ${total_amount} has been received. Appointment confirmed for ${appointment.date} at ${appointment.time}.`,
-                type: "payment",
-                relatedId: appointment._id,
-                relatedModel: "Appointment",
-                read: false
-            });
-
-            // Notify doctor
-            await Notification.create({
-                recipientId: appointment.doctorId,
-                title: "Appointment Confirmed",
-                message: `Patient has completed payment. Appointment confirmed for ${appointment.date} at ${appointment.time}.`,
-                type: "appointment",
-                relatedId: appointment._id,
-                relatedModel: "Appointment",
-                read: false
-            });
-        } catch (notificationError) {
-            console.error("Error sending notifications:", notificationError);
-        }
 
         // Clean up pending data
         pendingAppointmentData.delete(transaction_uuid);
