@@ -2,6 +2,7 @@ import express from "express";
 import Appointment from "../models/appointment.js";
 import User from "../models/user.js";
 import { requireAuth } from "../middleware/auth.js";
+import { trackPatientVisit } from "../middleware/patientTracker.js";
 import { sendAppointmentNotification } from "../services/emailService.js";
 
 const router = express.Router();
@@ -67,6 +68,28 @@ router.post("/", requireAuth, async (req, res) => {
     const appointment = await Appointment.create(appointmentData);
 
     console.log("Appointment created successfully:", appointment);
+
+    // Book the time slot in doctor schedule
+    try {
+      const DoctorSchedule = require("../models/doctorSchedule");
+      await DoctorSchedule.bookTimeSlot(doctorId, appointmentData.date, appointmentData.time, appointment._id);
+      console.log("Time slot booked successfully");
+    } catch (slotError) {
+      console.error("Failed to book time slot:", slotError);
+      // If time slot booking fails, delete the appointment
+      await Appointment.findByIdAndDelete(appointment._id);
+      return res.status(400).json({ 
+        success: false, 
+        message: slotError.message || "Time slot not available" 
+      });
+    }
+
+    // Track patient visit
+    try {
+      await trackPatientVisit(req, res, () => {});
+    } catch (trackingError) {
+      console.error("Patient tracking failed:", trackingError);
+    }
 
     // Send email notification to patient about booking confirmation
     try {
@@ -161,7 +184,7 @@ router.get("/", requireAuth, async (req, res) => {
     console.log("Attempting to find appointments...");
 
     const appointments = await Appointment.find(filter)
-      .populate("patientId", "name email picture")
+      .populate("patientId", "name email picture isNewPatient totalVisits lastVisitDate medicalHistory")
       .populate("doctorId", "name specialization email picture consultationFee")
       .sort({ date: -1, time: -1 });
 
@@ -245,6 +268,15 @@ router.put("/:id/status", requireAuth, async (req, res) => {
       appointment.approvedAt = new Date();
     } else if (status === "completed") {
       appointment.completedAt = new Date();
+      
+      // Mark the time slot as completed
+      try {
+        const DoctorSchedule = require("../models/doctorSchedule");
+        await DoctorSchedule.completeTimeSlot(appointment.doctorId, appointment.date, appointment.time);
+        console.log("Time slot marked as completed");
+      } catch (slotError) {
+        console.error("Failed to mark time slot as completed:", slotError);
+      }
     }
 
     await appointment.save();
@@ -370,6 +402,15 @@ router.put("/:id/cancel", requireAuth, async (req, res) => {
     appointment.cancelledAt = new Date();
     await appointment.save();
 
+    // Release the time slot
+    try {
+      const DoctorSchedule = require("../models/doctorSchedule");
+      await DoctorSchedule.releaseTimeSlot(appointment.doctorId, appointment.date, appointment.time);
+      console.log("Time slot released successfully");
+    } catch (slotError) {
+      console.error("Failed to release time slot:", slotError);
+    }
+
     res.json({ success: true, message: "Appointment cancelled successfully", appointment });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });
@@ -449,6 +490,62 @@ router.delete("/:id", requireAuth, async (req, res) => {
     await Appointment.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Appointment deleted" });
   } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+/* =========================
+   GET PATIENT HISTORY FOR DOCTORS
+========================= */
+router.get("/patient-history/:patientId", requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== "doctor") {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    const { patientId } = req.params;
+    const patient = await User.findById(patientId).populate('medicalHistory.doctorId', 'name specialization');
+    
+    if (!patient) {
+      return res.status(404).json({ success: false, message: "Patient not found" });
+    }
+
+    // Get past appointments with this doctor
+    const pastAppointments = await Appointment.find({
+      patientId: patientId,
+      doctorId: req.user.id,
+      status: { $in: ['completed', 'cancelled'] }
+    }).populate('doctorId', 'name specialization').sort({ createdAt: -1 }).limit(5);
+
+    res.json({
+      success: true,
+      patient: {
+        id: patient._id,
+        name: patient.name,
+        email: patient.email,
+        phone: patient.phone,
+        isNewPatient: patient.isNewPatient,
+        totalVisits: patient.totalVisits,
+        lastVisitDate: patient.lastVisitDate,
+        medicalHistory: patient.medicalHistory || []
+      },
+      visitStats: {
+        isReturningPatient: !patient.isNewPatient,
+        isFrequentVisitor: patient.totalVisits > 3,
+        daysSinceLastVisit: patient.lastVisitDate ? 
+          Math.floor((new Date() - new Date(patient.lastVisitDate)) / (1000 * 60 * 60 * 24)) : null
+      },
+      pastAppointmentsWithCurrentDoctor: pastAppointments,
+      appointmentNotes: pastAppointments.map(apt => ({
+        date: apt.date,
+        doctorName: apt.doctorId?.name || "Unknown",
+        specialization: apt.doctorId?.specialization || "General",
+        status: apt.status,
+        notes: apt.soapNotes?.subjective || "No notes available"
+      }))
+    });
+  } catch (error) {
+    console.error("Get patient history error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

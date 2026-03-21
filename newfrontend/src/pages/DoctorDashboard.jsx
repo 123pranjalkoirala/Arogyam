@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, User, Calendar as CalendarIcon, Star, Bell, Stethoscope, FileText, X, Plus } from "lucide-react";
+import { Search, User, Calendar as CalendarIcon, Star, Bell, Stethoscope, FileText, Plus, X, AlertCircle, TrendingUp, Clock } from "lucide-react";
 import ScrollToTop from "../components/ScrollToTop";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -35,6 +35,17 @@ export default function DoctorDashboard() {
     followUp: { date: "", notes: "", type: "in_person" }
   });
   const [selectedFile, setSelectedFile] = useState(null);
+  const [patientHistory, setPatientHistory] = useState(null);
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const [searchPatientId, setSearchPatientId] = useState("");
+  const [schedules, setSchedules] = useState([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    date: "",
+    timeSlots: [{ startTime: "", endTime: "" }],
+    isRecurring: false,
+    recurringPattern: ""
+  });
 
   useEffect(() => {
     if (!token) {
@@ -56,7 +67,7 @@ export default function DoctorDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchAppointments(), fetchProfile()]);
+      await Promise.all([fetchAppointments(), fetchProfile(), fetchSchedules()]);
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
@@ -126,6 +137,123 @@ export default function DoctorDashboard() {
     } catch (err) {
       console.error("Fetch profile error:", err);
     }
+  };
+
+  const fetchPatientHistory = async (patientId) => {
+    try {
+      console.log("=== FETCHING PATIENT HISTORY ===");
+      console.log("Patient ID:", patientId);
+      
+      const res = await fetch(`http://localhost:5000/api/appointments/patient-history/${patientId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      
+      console.log("Patient history response:", data);
+      if (data.success) {
+        setPatientHistory(data.patient);
+        console.log("Patient history loaded successfully");
+      } else {
+        console.error("Failed to load patient history:", data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching patient history:", err);
+    }
+  };
+
+  const fetchSchedules = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/doctor-schedule", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      
+      if (data.success) {
+        setSchedules(data.schedules);
+        console.log("Schedules loaded successfully");
+      }
+    } catch (err) {
+      console.error("Error fetching schedules:", err);
+    }
+  };
+
+  const createSchedule = async () => {
+    try {
+      // Validate form
+      if (!scheduleForm.date || scheduleForm.timeSlots.some(slot => !slot.startTime || !slot.endTime)) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
+      const res = await fetch("http://localhost:5000/api/doctor-schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(scheduleForm)
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Schedule created successfully");
+        setShowScheduleModal(false);
+        setScheduleForm({
+          date: "",
+          timeSlots: [{ startTime: "", endTime: "" }],
+          isRecurring: false,
+          recurringPattern: ""
+        });
+        fetchSchedules();
+      } else {
+        toast.error(data.message || "Failed to create schedule");
+      }
+    } catch (err) {
+      toast.error("Failed to create schedule");
+    }
+  };
+
+  const deleteSchedule = async (scheduleId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/doctor-schedule/${scheduleId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Schedule deleted successfully");
+        fetchSchedules();
+      } else {
+        toast.error(data.message || "Failed to delete schedule");
+      }
+    } catch (err) {
+      toast.error("Failed to delete schedule");
+    }
+  };
+
+  const addTimeSlot = () => {
+    setScheduleForm({
+      ...scheduleForm,
+      timeSlots: [...scheduleForm.timeSlots, { startTime: "", endTime: "" }]
+    });
+  };
+
+  const removeTimeSlot = (index) => {
+    setScheduleForm({
+      ...scheduleForm,
+      timeSlots: scheduleForm.timeSlots.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateTimeSlot = (index, field, value) => {
+    const updatedTimeSlots = [...scheduleForm.timeSlots];
+    updatedTimeSlots[index][field] = value;
+    setScheduleForm({ ...scheduleForm, timeSlots: updatedTimeSlots });
   };
 
   const updateProfile = async () => {
@@ -390,6 +518,7 @@ export default function DoctorDashboard() {
             <div className="flex border-b border-gray-200 bg-gray-50">
               {[
                 { id: "appointments", label: "Appointments" },
+                { id: "schedule", label: "My Schedule" },
                 { id: "profile", label: "My Profile" }
               ].map(tab => (
                 <button
@@ -410,7 +539,7 @@ export default function DoctorDashboard() {
               {/* APPOINTMENTS TAB */}
               {activeTab === "appointments" && (
                 <div>
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                  <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold text-gray-900">Appointment Requests</h2>
                     
                     {/* Filter */}
@@ -524,6 +653,85 @@ export default function DoctorDashboard() {
                                 )}
                               </div>
                             </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              
+              {/* SCHEDULE TAB */}
+              {activeTab === "schedule" && (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">My Availability Schedule</h2>
+                    <button
+                      onClick={() => setShowScheduleModal(true)}
+                      className="px-4 py-2 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0E8A6A] transition-all"
+                    >
+                      Add Schedule
+                    </button>
+                  </div>
+
+                  {schedules.length === 0 ? (
+                    <div className="text-center py-12">
+                      <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-base font-medium text-gray-700 mb-1">No schedules found</h3>
+                      <p className="text-sm text-gray-500">Create your availability schedule to allow patients to book appointments</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {schedules.map(schedule => (
+                        <div key={schedule._id} className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h3 className="text-base font-semibold text-gray-900">
+                                {new Date(schedule.date).toLocaleDateString('en-US', { 
+                                  weekday: 'long', 
+                                  year: 'numeric', 
+                                  month: 'long', 
+                                  day: 'numeric' 
+                                })}
+                              </h3>
+                              {schedule.isRecurring && (
+                                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium mt-1">
+                                  Recurring: {schedule.recurringPattern}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => deleteSchedule(schedule._id)}
+                              className="text-red-500 hover:text-red-700 text-sm font-medium"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {schedule.timeSlots.map((slot, index) => (
+                              <div 
+                                key={index} 
+                                className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                                  slot.status === 'booked' 
+                                    ? 'bg-red-100 text-red-800 border border-red-200'
+                                    : slot.status === 'completed'
+                                    ? 'bg-gray-100 text-gray-800 border border-gray-200'
+                                    : 'bg-green-100 text-green-800 border border-green-200'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span>{slot.startTime} - {slot.endTime}</span>
+                                  {slot.status === 'booked' && (
+                                    <span className="text-xs">📅 Booked</span>
+                                  )}
+                                  {slot.status === 'completed' && (
+                                    <span className="text-xs">✅ Done</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -980,6 +1188,453 @@ export default function DoctorDashboard() {
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* PATIENT HISTORY TAB */}
+      {activeTab === "patient-history" && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Patient History Lookup</h2>
+          </div>
+          
+          {/* Search Patient */}
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div className="flex gap-4 mb-4">
+              <input
+                type="text"
+                placeholder="Enter Patient ID or Email"
+                value={searchPatientId}
+                onChange={(e) => setSearchPatientId(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+              />
+              <button
+                onClick={() => {
+                  if (searchPatientId.trim()) {
+                    fetchPatientHistory(searchPatientId.trim());
+                    setShowPatientModal(true);
+                    setSearchPatientId("");
+                    toast.success("Patient history loaded");
+                  } else {
+                    toast.error("Please enter Patient ID or Email");
+                  }
+                }}
+                className="px-6 py-3 bg-[#1E88E5] text-white rounded-lg font-medium hover:bg-[#1976D2] transition-all"
+              >
+                <Search className="w-5 h-5" />
+                Search Patient
+              </button>
+            </div>
+          </div>
+
+          {/* Patient History Display */}
+          {patientHistory && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Patient: {patientHistory.name}
+                </h3>
+                
+                {/* Patient Status Indicators */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="w-5 h-5 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">Patient Status</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">New Patient:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          patientHistory.isNewPatient 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {patientHistory.isNewPatient ? "NEW" : "RETURNING"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Total Visits:</span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
+                          {patientHistory.totalVisits}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Last Visit:</span>
+                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">
+                          {patientHistory.lastVisitDate ? 
+                            new Date(patientHistory.lastVisitDate).toLocaleDateString() : 
+                            "Never"
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-5 h-5 text-green-600" />
+                      <span className="text-sm font-medium text-green-800">Visit Statistics</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Frequent Visitor:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          patientHistory.visitStats?.isFrequentVisitor 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-gray-100 text-gray-800"
+                        }`}>
+                          {patientHistory.visitStats?.isFrequentVisitor ? "YES" : "NO"}
+                        </span>
+                      </div>
+                      {patientHistory.visitStats?.daysSinceLastVisit !== null && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">Days Since Last Visit:</span>
+                          <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold">
+                            {patientHistory.visitStats.daysSinceLastVisit}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-5 h-5 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-800">Contact Info</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Email:</span>
+                        <span className="text-sm font-medium text-gray-900">{patientHistory.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Phone:</span>
+                        <span className="text-sm font-medium text-gray-900">{patientHistory.phone}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Medical History */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Medical History (Last 5 visits)</h4>
+                {patientHistory.medicalHistory && patientHistory.medicalHistory.length > 0 ? (
+                  <div className="space-y-3">
+                    {patientHistory.medicalHistory.slice(-5).map((record, index) => (
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="text-sm font-medium text-gray-900">
+                              {new Date(record.date).toLocaleDateString()}
+                            </span>
+                            <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                              record.type === "consultation" ? "bg-blue-100 text-blue-800" :
+                              record.type === "followup" ? "bg-green-100 text-green-800" :
+                              "bg-red-100 text-red-800"
+                            }`}>
+                              {record.type.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-600">Doctor:</span>
+                            <span className="text-sm font-medium text-gray-900">{record.doctorId?.name || "Unknown"}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Diagnosis:</span>
+                            <span className="text-sm font-medium text-gray-900">{record.diagnosis}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Prescription:</span>
+                            <span className="text-sm font-medium text-gray-900">{record.prescription}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Notes:</span>
+                            <span className="text-sm font-medium text-gray-900">{record.notes}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-sm">No medical history available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Past Appointments with Current Doctor */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Past Appointments with You</h4>
+                {patientHistory.appointmentNotes && patientHistory.appointmentNotes.length > 0 ? (
+                  <div className="space-y-3">
+                    {patientHistory.appointmentNotes.map((apt, index) => (
+                      <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="text-sm font-medium text-gray-900">{apt.date}</span>
+                            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                              {apt.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Dr. {apt.doctorName}</span>
+                            <span className="ml-2 text-xs text-gray-500">({apt.specialization})</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-700">
+                          <span className="font-medium">Notes:</span> {apt.notes}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-sm">No past appointments with current doctor</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {/* Patient History Modal */}
+      {showPatientModal && selectedAppointment && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Complete Patient History - {selectedAppointment.patientId?.name}
+                </h2>
+                <button onClick={() => setShowPatientModal(false)}>
+                  <X className="w-6 h-6 text-gray-500 hover:text-gray-700" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Patient Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {selectedAppointment.patientId?.totalVisits > 1 ? "🔄 REPEATED" : "🆕 NEW"}
+                    </div>
+                    <div className="text-sm text-gray-600">Patient Status</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {selectedAppointment.patientId?.totalVisits || 0}
+                    </div>
+                    <div className="text-sm text-gray-600">Total Visits</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {selectedAppointment.patientId?.lastVisitDate ? 
+                        new Date(selectedAppointment.patientId.lastVisitDate).toLocaleDateString() : 
+                        "Never"
+                      }
+                    </div>
+                    <div className="text-sm text-gray-600">Last Visit</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Complete Medical History */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Complete Medical History</h3>
+                {selectedAppointment.patientId?.medicalHistory && selectedAppointment.patientId.medicalHistory.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedAppointment.patientId.medicalHistory.slice().reverse().map((record, index) => (
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              {new Date(record.date).toLocaleDateString()}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              record.type === "consultation" ? "bg-blue-100 text-blue-800" :
+                              record.type === "followup" ? "bg-green-100 text-green-800" :
+                              "bg-red-100 text-red-800"
+                            }`}>
+                              {record.type.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-sm text-gray-600">Doctor:</span>
+                            <span className="text-sm font-medium text-gray-900 ml-2">
+                              Dr. {record.doctorId?.name || "Unknown"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Diagnosis:</span>
+                            <span className="text-sm font-medium text-gray-900 ml-2">
+                              {record.diagnosis || "Not recorded"}
+                            </span>
+                          </div>
+                          <div className="md:col-span-2">
+                            <span className="text-sm text-gray-600">Prescription:</span>
+                            <span className="text-sm font-medium text-gray-900 ml-2">
+                              {record.prescription || "Not recorded"}
+                            </span>
+                          </div>
+                          <div className="md:col-span-2">
+                            <span className="text-sm text-gray-600">Notes:</span>
+                            <span className="text-sm font-medium text-gray-900 ml-2">
+                              {record.notes || "No notes available"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                    <p className="text-lg font-medium">No medical history available</p>
+                    <p className="text-sm">This patient hasn't had any previous consultations</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-3xl">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPatientModal(false)}
+                  className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Create Availability Schedule</h2>
+                <button onClick={() => setShowScheduleModal(false)}>
+                  <X className="w-6 h-6 text-gray-500 hover:text-gray-700" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Date Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={scheduleForm.date}
+                  onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              {/* Time Slots */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Time Slots</label>
+                  <button
+                    onClick={addTimeSlot}
+                    className="px-3 py-1 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0E8A6A] transition-all"
+                  >
+                    Add Time Slot
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {scheduleForm.timeSlots.map((slot, index) => (
+                    <div key={index} className="flex gap-3 items-center">
+                      <input
+                        type="time"
+                        value={slot.startTime}
+                        onChange={(e) => updateTimeSlot(index, 'startTime', e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                        placeholder="Start Time"
+                      />
+                      <span className="text-gray-500">to</span>
+                      <input
+                        type="time"
+                        value={slot.endTime}
+                        onChange={(e) => updateTimeSlot(index, 'endTime', e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                        placeholder="End Time"
+                      />
+                      {scheduleForm.timeSlots.length > 1 && (
+                        <button
+                          onClick={() => removeTimeSlot(index)}
+                          className="p-2 text-red-500 hover:text-red-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recurring Options */}
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={scheduleForm.isRecurring}
+                    onChange={(e) => setScheduleForm({...scheduleForm, isRecurring: e.target.checked})}
+                    className="rounded border-gray-300 text-[#0F9D76] focus:ring-[#0F9D76]"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Recurring Schedule</span>
+                </label>
+                
+                {scheduleForm.isRecurring && (
+                  <div className="mt-3">
+                    <select
+                      value={scheduleForm.recurringPattern}
+                      onChange={(e) => setScheduleForm({...scheduleForm, recurringPattern: e.target.value})}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    >
+                      <option value="">Select pattern</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-3xl">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowScheduleModal(false)}
+                  className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createSchedule}
+                  className="flex-1 py-3 bg-[#0F9D76] text-white rounded-lg font-semibold hover:bg-[#0E8A6A] transition-colors"
+                >
+                  Create Schedule
                 </button>
               </div>
             </div>

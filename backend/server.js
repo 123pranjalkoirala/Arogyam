@@ -14,6 +14,7 @@ import ratingsRoutes from "./routes/ratings.js";
 import path from "path";
 import notificationsRoutes from "./routes/notifications.js";
 import soapRoutes from "./routes/soap.js";
+import doctorScheduleRoutes from "./routes/doctorSchedule.js";
 dotenv.config();
 connectDB();
 
@@ -30,6 +31,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/esewa", eSewaRoutes);
 app.use("/api/ratings", ratingsRoutes);
 app.use("/api/soap", soapRoutes);
+app.use("/api/doctor-schedule", doctorScheduleRoutes);
 app.use("/uploads", express.static(path.resolve("uploads")));
 app.use("/api/notifications", notificationsRoutes);
 
