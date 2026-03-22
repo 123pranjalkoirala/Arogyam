@@ -1,6 +1,7 @@
 import express from "express";
 import Appointment from "../models/appointment.js";
 import User from "../models/user.js";
+import DoctorSchedule from "../models/doctorSchedule.js";
 import { requireAuth } from "../middleware/auth.js";
 import { trackPatientVisit } from "../middleware/patientTracker.js";
 import { sendAppointmentNotification } from "../services/emailService.js";
@@ -71,7 +72,6 @@ router.post("/", requireAuth, async (req, res) => {
 
     // Book the time slot in doctor schedule
     try {
-      const DoctorSchedule = require("../models/doctorSchedule");
       await DoctorSchedule.bookTimeSlot(doctorId, appointmentData.date, appointmentData.time, appointment._id);
       console.log("Time slot booked successfully");
     } catch (slotError) {
@@ -271,7 +271,6 @@ router.put("/:id/status", requireAuth, async (req, res) => {
       
       // Mark the time slot as completed
       try {
-        const DoctorSchedule = require("../models/doctorSchedule");
         await DoctorSchedule.completeTimeSlot(appointment.doctorId, appointment.date, appointment.time);
         console.log("Time slot marked as completed");
       } catch (slotError) {
@@ -404,7 +403,6 @@ router.put("/:id/cancel", requireAuth, async (req, res) => {
 
     // Release the time slot
     try {
-      const DoctorSchedule = require("../models/doctorSchedule");
       await DoctorSchedule.releaseTimeSlot(appointment.doctorId, appointment.date, appointment.time);
       console.log("Time slot released successfully");
     } catch (slotError) {

@@ -29,6 +29,8 @@ export default function PatientDashboard() {
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [bookingReason, setBookingReason] = useState("");
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [reports, setReports] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedAppointmentForRating, setSelectedAppointmentForRating] = useState(null);
@@ -217,6 +219,42 @@ export default function PatientDashboard() {
     }
   };
 
+  const fetchAvailableSlots = async (doctorId, date) => {
+    if (!doctorId || !date) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    setLoadingSlots(true);
+    try {
+      console.log("=== FETCHING AVAILABLE SLOTS ===");
+      console.log("Doctor ID:", doctorId);
+      console.log("Date:", date);
+
+      const res = await fetch(`http://localhost:5000/api/doctor-schedule/available/${doctorId}/${date}`);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      console.log("Available slots response:", data);
+      
+      if (data.success) {
+        setAvailableSlots(data.availableSlots || []);
+        console.log("Available slots loaded:", data.availableSlots?.length || 0);
+      } else {
+        console.error("Failed to load available slots:", data.message);
+        setAvailableSlots([]);
+      }
+    } catch (error) {
+      console.error("Error fetching available slots:", error);
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
   const handleEditProfile = async () => {
     try {
       const res = await fetch("/api/auth/me", {
@@ -257,6 +295,7 @@ export default function PatientDashboard() {
       date: bookingDate,
       time: bookingTime,
       reason: bookingReason,
+      amount: selectedDoctor.consultationFee || 500,
     };
     
     console.log("Request data to be sent:", requestData);
@@ -286,6 +325,7 @@ export default function PatientDashboard() {
       setBookingDate("");
       setBookingTime("");
       setBookingReason("");
+      setAvailableSlots([]);
       setActiveTab("appointments");
     } catch (err) {
       console.error("Booking error:", err);
@@ -719,7 +759,12 @@ export default function PatientDashboard() {
                       filteredDoctors.map((doc) => (
                         <div
                           key={doc._id}
-                          onClick={() => setSelectedDoctor(doc)}
+                          onClick={() => {
+                              setSelectedDoctor(doc);
+                              setBookingDate("");
+                              setBookingTime("");
+                              setAvailableSlots([]);
+                            }}
                           className={`p-8 border-4 rounded-3xl cursor-pointer transition-all hover:shadow-2xl ${
                             selectedDoctor?._id === doc._id
                               ? "border-[#1E88E5] bg-[#1E88E5]/5 shadow-2xl"
@@ -764,7 +809,14 @@ export default function PatientDashboard() {
                           <input
                             type="date"
                             value={bookingDate}
-                            onChange={(e) => setBookingDate(e.target.value)}
+                            onChange={(e) => {
+                              setBookingDate(e.target.value);
+                              setBookingTime("");
+                              setAvailableSlots([]);
+                              if (selectedDoctor && e.target.value) {
+                                fetchAvailableSlots(selectedDoctor._id, e.target.value);
+                              }
+                            }}
                             min={new Date().toISOString().split("T")[0]}
                             className="w-full px-6 py-5 border-2 rounded-2xl text-lg focus:border-[#0F9D76]"
                             required
@@ -772,13 +824,34 @@ export default function PatientDashboard() {
                         </div>
                         <div>
                           <label className="block text-xl font-medium mb-3">Select Time</label>
-                          <input
-                            type="time"
-                            value={bookingTime}
-                            onChange={(e) => setBookingTime(e.target.value)}
-                            className="w-full px-6 py-5 border-2 rounded-2xl text-lg focus:border-[#0F9D76]"
-                            required
-                          />
+                          {loadingSlots ? (
+                            <div className="w-full px-6 py-5 border-2 rounded-2xl text-lg bg-gray-50 text-center">
+                              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                              Loading available slots...
+                            </div>
+                          ) : availableSlots.length > 0 ? (
+                            <select
+                              value={bookingTime}
+                              onChange={(e) => setBookingTime(e.target.value)}
+                              className="w-full px-6 py-5 border-2 rounded-2xl text-lg focus:border-[#0F9D76]"
+                              required
+                            >
+                              <option value="">Select a time slot</option>
+                              {availableSlots.map((slot, index) => (
+                                <option key={index} value={slot.startTime}>
+                                  {slot.startTime} - {slot.endTime}
+                                </option>
+                              ))}
+                            </select>
+                          ) : bookingDate ? (
+                            <div className="w-full px-6 py-5 border-2 rounded-2xl text-lg bg-red-50 text-center text-red-600">
+                              No appointment available for this time
+                            </div>
+                          ) : (
+                            <div className="w-full px-6 py-5 border-2 rounded-2xl text-lg bg-gray-50 text-center text-gray-500">
+                              Select a date to see available slots
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="mb-10">

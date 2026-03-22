@@ -46,10 +46,12 @@ export default function Notifications() {
           );
 
           if (trulyNewNotifications.length > 0) {
-            // Show toast for new notifications
-            trulyNewNotifications.forEach(notification => {
-              toast.success(notification.message);
-            });
+            // Show a single toast notification for all new notifications
+            if (trulyNewNotifications.length === 1) {
+              toast.success(`You have 1 new notification`);
+            } else {
+              toast.success(`You have ${trulyNewNotifications.length} new notifications`);
+            }
 
             // Add new notifications to the beginning of the array
             setNotifications(prev => [...trulyNewNotifications, ...prev]);
