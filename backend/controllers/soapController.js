@@ -1,5 +1,7 @@
 // SOAP Controller - Professional Medical Documentation System
 
+import mongoose from "mongoose";
+
 import SOAPNote from "../models/soapNote.js";
 
 import Appointment from "../models/appointment.js";
@@ -74,14 +76,6 @@ export const createSOAPNote = async (req, res) => {
 
     console.log("=== UPDATING APPOINTMENT STATUS ===");
 
-    await Appointment.findByIdAndUpdate(appointmentId, { 
-
-      status: 'completed',
-
-      completedAt: new Date()
-
-    });
-
     console.log("Appointment marked as completed");
 
     
@@ -137,6 +131,88 @@ export const createSOAPNote = async (req, res) => {
     
 
     console.log("SOAP note saved:", soapNote._id);
+
+    // Update appointment status to completed
+    await Appointment.findByIdAndUpdate(appointmentId, { 
+      status: 'completed',
+      completedAt: new Date()
+    });
+
+    // Release the time slot back to available for future bookings
+    try {
+      const DoctorSchedule = mongoose.model('DoctorSchedule');
+      const appointment = await Appointment.findById(appointmentId);
+      
+      console.log("=== APPOINTMENT DETAILS FOR TIME SLOT RELEASE ===");
+      console.log("Appointment found:", !!appointment);
+      if (appointment) {
+        console.log("Appointment date:", appointment.date);
+        console.log("Appointment time:", appointment.time);
+        console.log("Doctor ID:", user.id);
+      }
+      
+      if (appointment && appointment.date && appointment.time) {
+        console.log("=== RELEASING TIME SLOT BACK TO AVAILABLE ===");
+        console.log("Doctor ID:", user.id);
+        console.log("Date:", appointment.date);
+        console.log("Time:", appointment.time);
+        
+        // First, let's check what the current schedule looks like
+        const currentSchedule = await DoctorSchedule.findOne({
+          doctorId: user.id,
+          date: new Date(appointment.date),
+          isActive: true
+        });
+        
+        console.log("Current schedule found:", !!currentSchedule);
+        if (currentSchedule) {
+          console.log("Current time slots:", currentSchedule.timeSlots.map(slot => ({
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            status: slot.status,
+            isAvailable: slot.isAvailable,
+            appointmentId: slot.appointmentId
+          })));
+        }
+        
+        // Use the releaseTimeSlot method to make the time slot available again
+        const releasedSlot = await DoctorSchedule.releaseTimeSlot(
+          user.id,
+          new Date(appointment.date),
+          appointment.time
+        );
+        
+        console.log("Release result:", releasedSlot);
+        
+        if (releasedSlot) {
+          console.log("Time slot released successfully:", releasedSlot.startTime);
+          console.log("New status:", releasedSlot.status);
+          console.log("New isAvailable:", releasedSlot.isAvailable);
+        } else {
+          console.log("Time slot not found or already available");
+        }
+        
+        // Check the schedule again after release
+        const updatedSchedule = await DoctorSchedule.findOne({
+          doctorId: user.id,
+          date: new Date(appointment.date),
+          isActive: true
+        });
+        
+        if (updatedSchedule) {
+          console.log("Updated time slots:", updatedSchedule.timeSlots.map(slot => ({
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            status: slot.status,
+            isAvailable: slot.isAvailable,
+            appointmentId: slot.appointmentId
+          })));
+        }
+      }
+    } catch (scheduleError) {
+      console.error("Error releasing time slot:", scheduleError);
+      // Don't fail the SOAP note creation if schedule update fails
+    }
 
     
 
