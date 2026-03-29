@@ -1,54 +1,99 @@
+// PATIENT DASHBOARD - Patient Portal Main Component
+ 
+// 
+// PURPOSE: Central dashboard for patients to manage appointments, medical records,
 import React, { useState, useEffect } from "react";
+
+// React Router - Navigation between different pages
 import { useNavigate } from "react-router-dom";
+
+// Lucide Icons - Professional UI icons for healthcare interface
 import { Calendar, Clock, User, Bell, FileText, Plus, Stethoscope, Star, ChevronRight, Search, Filter, X, CalendarX, RefreshCw } from "lucide-react";
+
+// Toast Notifications - User feedback system
 import toast from "react-hot-toast";
-import Navbar from "../components/Navbar";
-import ScrollToTop from "../components/ScrollToTop";
-import SingleNotification from "../components/SingleNotification.jsx";
+
+// Application Components - Custom UI components
+import Navbar from "../components/Navbar";           // Main navigation
+import ScrollToTop from "../components/ScrollToTop";     // Scroll behavior
+
+
+// COMPONENT DEFINITION - Patient Dashboard Main Function
 
 export default function PatientDashboard() {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("role");
-  const userName = localStorage.getItem("userName");
+  // AUTHENTICATION AND NAVIGATION SETUP
   
-  console.log("=== PATIENT DASHBOARD DEBUG ===");
+  // Navigation Hook - For programmatic navigation
+  const navigate = useNavigate();
+  
+  // Authentication Data - Retrieved from localStorage
+  const token = localStorage.getItem("token");        // JWT token for API calls
+  const userRole = localStorage.getItem("role");       // User role verification
+  const userName = localStorage.getItem("userName");      // Personalized display
+  
+  // Debug Logging - Development and troubleshooting
+  console.log("PATIENT DASHBOARD DEBUG");
   console.log("Token:", !!token);
   console.log("User Role:", userRole);
   console.log("User Name:", userName);
   
-  const [activeTab, setActiveTab] = useState("overview");
-  const [profile, setProfile] = useState(null);
-  const [appointments, setAppointments] = useState([]);
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [editForm, setEditForm] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [doctors, setDoctors] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [bookingDate, setBookingDate] = useState("");
-  const [bookingTime, setBookingTime] = useState("");
-  const [bookingReason, setBookingReason] = useState("");
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [reports, setReports] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [selectedAppointmentForRating, setSelectedAppointmentForRating] = useState(null);
-  const [ratingData, setRatingData] = useState({ rating: 0, review: "" });
-  const [appointmentFilter, setAppointmentFilter] = useState("all");
-  const [soapNotes, setSoapNotes] = useState([]);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // STATE MANAGEMENT - Component State Variables
+  
+  // Tab Management - Controls which section is visible
+  const [activeTab, setActiveTab] = useState("overview");  // Current active tab
+  
+  // Profile Management - User personal and medical information
+  const [profile, setProfile] = useState(null);              // User profile data
+  const [editingProfile, setEditingProfile] = useState(false);     // Profile edit mode
+  const [editForm, setEditForm] = useState({});           // Profile form data
+  
+  // Appointment Management - Booking and scheduling
+  const [appointments, setAppointments] = useState([]);         // User appointments
+  const [appointmentFilter, setAppointmentFilter] = useState("all"); // Appointment status filter
+  const [selectedAppointment, setSelectedAppointment] = useState(null);  // Selected for actions
+  const [showCancelModal, setShowCancelModal] = useState(false);   // Cancellation modal
+  
+  // Doctor Selection - For booking appointments
+  const [doctors, setDoctors] = useState([]);               // Available doctors
+  const [searchQuery, setSearchQuery] = useState("");          // Doctor search term
+  const [selectedDoctor, setSelectedDoctor] = useState(null);      // Chosen doctor
+  
+  // Booking Form - Appointment scheduling data
+  const [bookingDate, setBookingDate] = useState("");        // Selected date
+  const [bookingTime, setBookingTime] = useState("");        // Selected time slot
+  const [bookingReason, setBookingReason] = useState("");      // Visit reason
+  const [availableSlots, setAvailableSlots] = useState([]);     // Doctor's available times
+  const [loadingSlots, setLoadingSlots] = useState(false);     // Loading state for slots
+  
+  // Medical Records - Health documents and history
+  const [reports, setReports] = useState([]);                 // Medical reports/prescriptions
+  const [soapNotes, setSoapNotes] = useState([]);             // Clinical documentation
+  
+  // Notifications - User alerts and updates
+  const [notifications, setNotifications] = useState([]);         // User notifications
+  
+  // Rating System - Doctor feedback and reviews
+  const [selectedAppointmentForRating, setSelectedAppointmentForRating] = useState(null); // Appointment to rate
+  const [ratingData, setRatingData] = useState({ rating: 0, review: "" }); // Rating form data
+  
+  // Loading State - General loading indicator
+  const [loading, setLoading] = useState(true);               // Initial data loading
 
+  // COMPONENT LIFECYCLE - useEffect Hooks
+  
+  
+  // Authentication and Authorization Check
   useEffect(() => {
+    // Verify user is logged in
     if (!token) {
       toast.error("Please login first");
       navigate("/login");
       return;
     }
     
+    // Verify user has correct role
     if (userRole !== "patient") {
-      console.log("=== ROLE MISMATCH ===");
+      console.log("ROLE MISMATCH");
       console.log("Expected: patient, Got:", userRole);
       toast.error(`Access denied. This dashboard is for patients only. Your role: ${userRole}`);
       navigate(`/${userRole}`);
@@ -59,7 +104,7 @@ export default function PatientDashboard() {
   const loadData = useEffect(() => {
     const initialize = async () => {
       try {
-        console.log("=== LOADING DATA ===");
+        console.log("LOADING DATA");
         await Promise.all([
           loadProfile(),
           loadAppointments(),
@@ -68,13 +113,13 @@ export default function PatientDashboard() {
           loadNotifications(),
           loadSOAPNotes()
         ]);
-        console.log("=== DATA LOADING COMPLETED ===");
+        console.log("DATA LOADING COMPLETED");
       } catch (error) {
         console.error("Error loading data:", error);
         toast.error("Failed to load some data");
       } finally {
         setLoading(false);
-        console.log("=== LOADING SET TO FALSE ===");
+        console.log("LOADING SET TO FALSE");
       }
     };
     initialize();

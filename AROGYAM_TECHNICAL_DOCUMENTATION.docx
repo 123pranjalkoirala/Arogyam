@@ -1,0 +1,728 @@
+# AROGYAM HEALTHCARE MANAGEMENT SYSTEM
+## Complete Technical Documentation
+
+---
+
+## 📋 TABLE OF CONTENTS
+1. [System Overview](#system-overview)
+2. [Project Structure](#project-structure)
+3. [Frontend Architecture](#frontend-architecture)
+4. [Backend Architecture](#backend-architecture)
+5. [Database Schema](#database-schema)
+6. [Key Features & Workflows](#key-features--workflows)
+7. [API Endpoints](#api-endpoints)
+8. [Authentication & Security](#authentication--security)
+9. [File Upload System](#file-upload-system)
+10. [Deployment & Environment](#deployment--environment)
+
+---
+
+## 🏥 SYSTEM OVERVIEW
+
+### What is AROGYAM?
+AROGYAM is a comprehensive healthcare management system that connects patients with doctors for online consultations, appointment scheduling, prescription management, and medical record tracking.
+
+### Key Components:
+- **Patient Portal**: Book appointments, view medical history, download prescriptions
+- **Doctor Portal**: Manage appointments, create SOAP notes, upload prescriptions
+- **Admin System**: User management, system oversight
+- **Payment Integration**: ePay payment gateway for consultations
+
+### Technology Stack:
+- **Frontend**: React.js with Tailwind CSS
+- **Backend**: Node.js with Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT tokens
+- **File Storage**: Local file system with organized directories
+
+---
+
+## 📁 PROJECT STRUCTURE
+
+```
+AROGYAM/
+├── backend/                    # Server-side application
+│   ├── controllers/           # Business logic handlers
+│   │   ├── appointmentController.js
+│   │   ├── authController.js
+│   │   ├── doctorController.js
+│   │   ├── reportController.js
+│   │   └── soapController.js
+│   ├── middleware/            # Request processing middleware
+│   │   ├── auth.js           # JWT authentication
+│   │   └── patientTracker.js  # Patient visit tracking
+│   ├── models/               # Database schema definitions
+│   │   ├── appointment.js
+│   │   ├── doctorSchedule.js
+│   │   ├── report.js
+│   │   ├── soapNote.js
+│   │   └── user.js
+│   ├── routes/               # API route definitions
+│   │   ├── appointments.js
+│   │   ├── auth.js
+│   │   ├── doctors.js
+│   │   ├── reports.js
+│   │   └── soap.js
+│   ├── services/             # External service integrations
+│   │   └── emailService.js
+│   ├── uploads/              # File storage directory
+│   │   ├── prescriptions/
+│   │   ├── reports/
+│   │   └── profiles/
+│   └── server.js            # Main server entry point
+├── newfrontend/              # React.js frontend application
+│   ├── public/              # Static assets
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── pages/           # Main application pages
+│   │   │   ├── DoctorDashboard.jsx
+│   │   │   ├── PatientDashboard.jsx
+│   │   │   ├── PatientAppointment.jsx
+│   │   │   └── ...
+│   │   ├── context/         # React context providers
+│   │   └── utils/           # Utility functions
+│   └── package.json
+└── README.md
+```
+
+---
+
+## 🎨 FRONTEND ARCHITECTURE
+
+### Core Technologies
+- **React.js**: Component-based UI framework
+- **Tailwind CSS**: Utility-first CSS framework
+- **React Router**: Client-side routing
+- **Axios**: HTTP client for API calls
+- **React Toastify**: Notification system
+
+### Key Frontend Files Explained
+
+#### 1. `DoctorDashboard.jsx` - Doctor's Main Interface
+**Purpose**: Central hub for doctors to manage their practice
+
+**Key Sections**:
+
+```javascript
+// STATE MANAGEMENT
+const [appointments, setAppointments] = useState([]);        // Doctor's appointments
+const [schedules, setSchedules] = useState([]);              // Doctor's availability
+const [showScheduleModal, setShowScheduleModal] = useState(false); // Modal controls
+```
+
+**How it works**:
+1. **Authentication Check**: Verifies doctor is logged in
+2. **Data Loading**: Fetches appointments, schedules, profile data
+3. **Appointment Management**: Shows upcoming, past, and completed appointments
+4. **SOAP Note Creation**: Allows doctors to add medical notes
+5. **Prescription Upload**: Enables file upload for patient prescriptions
+6. **Schedule Management**: Set availability for appointments
+
+**Key Functions**:
+- `fetchAppointments()`: Gets doctor's appointments from API
+- `handleCompleteAppointment()`: Marks appointments as completed
+- `handleUploadPrescription()`: Uploads prescription files
+- `fetchSchedules()`: Loads doctor's availability schedule
+
+#### 2. `PatientDashboard.jsx` - Patient's Main Interface
+**Purpose**: Patient portal for managing healthcare activities
+
+**Key Sections**:
+
+```javascript
+// STATE MANAGEMENT
+const [appointments, setAppointments] = useState([]);        // Patient's appointments
+const [reports, setReports] = useState([]);                 // Medical reports/prescriptions
+const [doctors, setDoctors] = useState([]);                 // Available doctors
+```
+
+**How it works**:
+1. **Dashboard Overview**: Shows upcoming appointments and medical history
+2. **Appointment Booking**: Browse doctors and schedule appointments
+3. **Medical Records**: View and download prescriptions/reports
+4. **Profile Management**: Update personal and medical information
+5. **Payment Processing**: Handle appointment payments via ePay
+
+**Key Functions**:
+- `loadReports()`: Fetches patient's medical reports
+- `fetchDoctors()`: Gets list of available doctors
+- `fetchMyAppointments()`: Loads patient's appointment history
+
+#### 3. `PatientAppointment.jsx` - Appointment Booking Interface
+**Purpose**: Dedicated page for booking and managing appointments
+
+**How it works**:
+1. **Doctor Selection**: Browse and filter doctors by specialty
+2. **Schedule Viewing**: See doctor's available time slots
+3. **Appointment Booking**: Select date/time and book appointment
+4. **Payment Processing**: Complete payment via ePay gateway
+5. **Confirmation**: Receive booking confirmation
+
+---
+
+## 🔧 BACKEND ARCHITECTURE
+
+### Core Technologies
+- **Node.js**: JavaScript runtime environment
+- **Express.js**: Web application framework
+- **MongoDB**: NoSQL database
+- **Mongoose**: MongoDB object modeling
+- **JWT**: Authentication tokens
+- **Multer**: File upload handling
+- **bcrypt.js**: Password hashing
+
+### Key Backend Files Explained
+
+#### 1. `server.js` - Main Server Entry Point
+**Purpose**: Initializes and configures the Express server
+
+**How it works**:
+```javascript
+// Database Connection
+mongoose.connect(process.env.MONGODB_URI);
+
+// Middleware Setup
+app.use(cors());                    // Cross-origin requests
+app.use(express.json());            // JSON parsing
+app.use('/uploads', express.static('uploads')); // Static file serving
+
+// Route Registration
+app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/soap', soapRoutes);
+
+// Server Start
+app.listen(5000, () => console.log('Server running on port 5000'));
+```
+
+#### 2. `controllers/authController.js` - Authentication Logic
+**Purpose**: Handles user registration, login, and authentication
+
+**Key Functions**:
+
+```javascript
+// User Registration
+export const register = async (req, res) => {
+  // 1. Validate input data
+  // 2. Check if user already exists
+  // 3. Hash password with bcrypt
+  // 4. Create new user in database
+  // 5. Generate JWT token
+  // 6. Return user data with token
+};
+
+// User Login
+export const login = async (req, res) => {
+  // 1. Find user by email
+  // 2. Verify password
+  // 3. Generate JWT token
+  // 4. Return user data with token
+};
+```
+
+#### 3. `controllers/appointmentController.js` - Appointment Management
+**Purpose**: Manages all appointment-related operations
+
+**Key Functions**:
+
+```javascript
+// Create Appointment
+export const createAppointment = async (req, res) => {
+  // 1. Validate appointment data
+  // 2. Check doctor availability
+  // 3. Create appointment record
+  // 4. Send notification to doctor
+  // 5. Return appointment details
+};
+
+// Get Patient History
+export const getPatientHistory = async (req, res) => {
+  // 1. Verify doctor authorization
+  // 2. Find patient's past appointments
+  // 3. Populate related data (prescriptions, SOAP notes)
+  // 4. Return structured history data
+};
+```
+
+#### 4. `middleware/auth.js` - Authentication Middleware
+**Purpose**: Protects routes and verifies user tokens
+
+**How it works**:
+```javascript
+export const requireAuth = (req, res, next) => {
+  // 1. Extract token from request headers
+  // 2. Verify JWT token validity
+  // 3. Find user from token payload
+  // 4. Attach user to request object
+  // 5. Continue to next middleware/route
+};
+```
+
+#### 5. `models/user.js` - User Schema Definition
+**Purpose**: Defines the structure for user data in MongoDB
+
+**Schema Structure**:
+```javascript
+const userSchema = new mongoose.Schema({
+  name: String,                    // User's full name
+  email: String,                   // Unique email address
+  password: String,                 // Hashed password
+  role: String,                     // 'patient', 'doctor', or 'admin'
+  phone: String,                    // Phone number
+  gender: String,                   // Gender information
+  
+  // Doctor-specific fields
+  specialization: String,           // Medical specialization
+  qualification: String,            // Medical qualifications
+  experience: Number,               // Years of experience
+  consultationFee: Number,         // Fee per consultation
+  
+  // Patient-specific fields
+  age: Number,                      // Patient age
+  bloodGroup: String,               // Blood group
+  medicalHistory: [String],          // Medical conditions
+  allergies: [String],               // Known allergies
+  
+  isNewPatient: Boolean,            // First-time visit flag
+  totalVisits: Number,              // Total appointment count
+  lastVisitDate: Date               // Last appointment date
+});
+```
+
+---
+
+## 🗄️ DATABASE SCHEMA
+
+### MongoDB Collections Overview
+
+#### 1. Users Collection
+**Purpose**: Stores all user accounts (patients, doctors, admins)
+
+**Key Fields**:
+- `_id`: Unique identifier
+- `name`: User's full name
+- `email`: Unique email address
+- `password`: Hashed password
+- `role`: User type ('patient', 'doctor', 'admin')
+- `profile`: Profile information
+- `medicalInfo`: Medical history and conditions
+
+**Relationships**:
+- One-to-many with Appointments (as patient or doctor)
+- One-to-many with Reports (as patient or doctor)
+- One-to-many with SOAP Notes (as doctor)
+
+#### 2. Appointments Collection
+**Purpose**: Stores all appointment records
+
+**Key Fields**:
+```javascript
+{
+  patientId: ObjectId,             // Reference to User (patient)
+  doctorId: ObjectId,              // Reference to User (doctor)
+  date: String,                    // Appointment date
+  time: String,                    // Appointment time
+  reason: String,                  // Appointment reason
+  status: String,                  // 'pending', 'approved', 'completed', 'cancelled'
+  
+  // Payment information
+  paymentStatus: String,            // 'pending', 'paid', 'failed'
+  paymentId: String,               // Payment transaction ID
+  amount: Number,                  // Consultation fee
+  
+  // Meeting information
+  meetingRoom: String,             // Virtual meeting room ID
+  meetingStart: Date,              // Meeting start time
+  meetingEnd: Date,                // Meeting end time
+}
+```
+
+**Relationships**:
+- Many-to-one with Users (patient and doctor)
+- One-to-many with Reports (prescriptions)
+- One-to-many with SOAP Notes
+
+#### 3. Reports Collection (Prescriptions)
+**Purpose**: Stores medical reports and prescriptions
+
+**Key Fields**:
+```javascript
+{
+  patientId: ObjectId,             // Reference to User (patient)
+  doctorId: ObjectId,              // Reference to User (doctor)
+  appointmentId: ObjectId,         // Reference to Appointment
+  title: String,                   // Report title
+  fileUrl: String,                  // File storage path
+  
+  // SOAP-like medical information
+  subjective: String,              // Patient symptoms/description
+  objective: String,               // Doctor's observations
+  assessment: String,              // Diagnosis
+  plan: String,                    // Treatment plan
+  
+  createdAt: Date                  // Upload timestamp
+}
+```
+
+**Relationships**:
+- Many-to-one with Users (patient and doctor)
+- Many-to-one with Appointments
+
+#### 4. SOAP Notes Collection
+**Purpose**: Stores SOAP (Subjective, Objective, Assessment, Plan) notes
+
+**Key Fields**:
+```javascript
+{
+  appointmentId: ObjectId,         // Reference to Appointment
+  patientId: ObjectId,             // Reference to User (patient)
+  doctorId: ObjectId,              // Reference to User (doctor)
+  
+  // SOAP components
+  subjective: String,              // Patient's reported symptoms
+  objective: String,               // Doctor's clinical findings
+  assessment: String,              // Medical diagnosis
+  plan: String,                    // Treatment recommendations
+  followUp: String,                // Follow-up instructions
+  
+  createdAt: Date                  // Note creation timestamp
+}
+```
+
+**Relationships**:
+- Many-to-one with Appointments
+- Many-to-one with Users (patient and doctor)
+
+#### 5. Doctor Schedules Collection
+**Purpose**: Stores doctor availability schedules
+
+**Key Fields**:
+```javascript
+{
+  doctorId: ObjectId,              // Reference to User (doctor)
+  
+  // Weekly schedule
+  monday: { available: Boolean, slots: [String] },
+  tuesday: { available: Boolean, slots: [String] },
+  wednesday: { available: Boolean, slots: [String] },
+  thursday: { available: Boolean, slots: [String] },
+  friday: { available: Boolean, slots: [String] },
+  saturday: { available: Boolean, slots: [String] },
+  sunday: { available: Boolean, slots: [String] }
+}
+```
+
+**Relationships**:
+- Many-to-one with Users (doctor)
+
+---
+
+## 🔄 KEY FEATURES & WORKFLOWS
+
+### 1. User Registration & Authentication Workflow
+
+**Process Flow**:
+1. **User Registration**:
+   - User fills registration form
+   - Backend validates input data
+   - Password is hashed with bcrypt
+   - User record created in MongoDB
+   - JWT token generated and returned
+
+2. **User Login**:
+   - User submits email/password
+   - Backend finds user by email
+   - Password is verified with bcrypt
+   - JWT token generated and returned
+   - Token stored in localStorage
+
+3. **Authentication Middleware**:
+   - Every protected API call includes JWT token
+   - Middleware verifies token validity
+   - User information attached to request
+   - Request proceeds to handler
+
+### 2. Appointment Booking Workflow
+
+**Process Flow**:
+1. **Doctor Selection**:
+   - Patient browses available doctors
+   - Filters by specialization
+   - Views doctor profiles and availability
+
+2. **Schedule Selection**:
+   - Patient selects preferred date
+   - Available time slots displayed
+   - System checks doctor availability
+
+3. **Appointment Creation**:
+   - Appointment record created in database
+   - Status set to 'pending'
+   - Payment required for confirmation
+
+4. **Payment Processing**:
+   - Patient redirected to ePay gateway
+   - Payment processed securely
+   - Appointment status updated to 'approved'
+
+5. **Notification System**:
+   - Doctor receives appointment notification
+   - Patient receives confirmation
+   - Email notifications sent
+
+### 3. Prescription Management Workflow
+
+**Process Flow**:
+1. **Prescription Upload (Doctor)**:
+   - Doctor selects completed appointment
+   - Uploads prescription file
+   - File stored in `/uploads/prescriptions/`
+   - Report record created in database
+
+2. **Prescription Access (Patient)**:
+   - Patient views medical reports section
+   - System fetches patient's reports
+   - Reports displayed with download options
+
+3. **File Download**:
+   - Click download button
+   - File served from static directory
+   - Download initiated in browser
+
+### 4. SOAP Note Creation Workflow
+
+**Process Flow**:
+1. **Appointment Completion**:
+   - Doctor marks appointment as completed
+   - SOAP note creation form appears
+
+2. **SOAP Entry**:
+   - **Subjective**: Patient's reported symptoms
+   - **Objective**: Doctor's clinical findings
+   - **Assessment**: Medical diagnosis
+   - **Plan**: Treatment recommendations
+
+3. **Note Storage**:
+   - SOAP note saved to database
+   - Linked to appointment and patient
+   - Available for future reference
+
+---
+
+## 🌐 API ENDPOINTS
+
+### Authentication Endpoints
+```
+POST /api/auth/register          # User registration
+POST /api/auth/login             # User login
+GET  /api/auth/me                # Get current user info
+```
+
+### Appointment Endpoints
+```
+GET    /api/appointments          # Get all appointments
+POST   /api/appointments          # Create new appointment
+GET    /api/appointments/:id      # Get specific appointment
+PUT    /api/appointments/:id      # Update appointment
+DELETE /api/appointments/:id      # Cancel appointment
+GET    /api/appointments/patient-history/:patientId  # Get patient history
+```
+
+### Doctor Endpoints
+```
+GET  /api/doctors                 # Get all doctors
+GET  /api/doctors/:id             # Get specific doctor
+PUT  /api/doctors/profile         # Update doctor profile
+GET  /api/doctor-schedule         # Get doctor schedule
+POST /api/doctor-schedule         # Create/update schedule
+```
+
+### Report Endpoints
+```
+GET    /api/reports               # Get all reports
+POST   /api/reports               # Upload new report
+GET    /api/reports/:id           # Get specific report
+DELETE /api/reports/:id           # Delete report
+```
+
+### SOAP Note Endpoints
+```
+GET  /api/soap/patient            # Get patient SOAP notes
+POST /api/soap                    # Create SOAP note
+GET  /api/soap/:appointmentId     # Get SOAP note for appointment
+```
+
+---
+
+## 🔐 AUTHENTICATION & SECURITY
+
+### JWT Token System
+**How it works**:
+1. **Token Generation**: When user logs in, server creates JWT token
+2. **Token Structure**: Contains user ID, role, and expiration time
+3. **Token Storage**: Client stores token in localStorage
+4. **Token Verification**: Middleware verifies token on each request
+
+### Security Features
+- **Password Hashing**: bcrypt.js for secure password storage
+- **Token Expiration**: JWT tokens expire after 24 hours
+- **Role-Based Access**: Different access levels for patients, doctors, admins
+- **Input Validation**: Sanitization and validation of all inputs
+- **CORS Configuration**: Controlled cross-origin resource sharing
+
+### Protected Routes
+```javascript
+// Example of protected route
+router.post('/appointments', requireAuth, async (req, res) => {
+  // Only authenticated users can access
+  // req.user contains user information from JWT token
+});
+```
+
+---
+
+## 📁 FILE UPLOAD SYSTEM
+
+### File Storage Structure
+```
+uploads/
+├── prescriptions/          # Prescription files
+│   ├── prescription_123.pdf
+│   ├── prescription_456.jpg
+│   └── ...
+├── reports/               # Medical reports
+│   ├── report_789.pdf
+│   └── ...
+└── profiles/              # Profile pictures
+    ├── profile_abc.jpg
+    └── ...
+```
+
+### Upload Process
+1. **File Selection**: User selects file via form input
+2. **Validation**: Backend checks file type and size
+3. **Storage**: File saved to appropriate directory
+4. **Database Record**: File path stored in database
+5. **Access**: File served via static route
+
+### Multer Configuration
+```javascript
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/prescriptions/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `prescription_${Date.now()}_${file.originalname}`);
+  }
+});
+```
+
+---
+
+## 🚀 DEPLOYMENT & ENVIRONMENT
+
+### Environment Variables
+```bash
+# Database
+MONGODB_URI=mongodb://localhost:27017/arogyam
+
+# JWT Secret
+JWT_SECRET=your_jwt_secret_key
+
+# Server Port
+PORT=5000
+
+# Email Service (optional)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_email_password
+```
+
+### Development Setup
+1. **Install Dependencies**:
+   ```bash
+   cd backend && npm install
+   cd ../newfrontend && npm install
+   ```
+
+2. **Start MongoDB**:
+   ```bash
+   mongod
+   ```
+
+3. **Start Backend Server**:
+   ```bash
+   cd backend && npm start
+   ```
+
+4. **Start Frontend Development Server**:
+   ```bash
+   cd newfrontend && npm start
+   ```
+
+### Production Considerations
+- **Environment Variables**: Secure configuration management
+- **Database Security**: MongoDB authentication and encryption
+- **File Storage**: Cloud storage for scalability
+- **SSL/TLS**: HTTPS encryption for all communications
+- **Load Balancing**: Multiple server instances for high availability
+
+---
+
+## 📊 SYSTEM MONITORING & LOGGING
+
+### Logging Strategy
+- **Request Logging**: All API requests logged with timestamps
+- **Error Logging**: Detailed error information for debugging
+- **User Activity**: Track user actions for audit trails
+- **Performance Monitoring**: Response time and system load tracking
+
+### Debug Features
+```javascript
+// Example debug logging
+console.log("=== APPOINTMENT CREATION DEBUG ===");
+console.log("User:", req.user);
+console.log("Request body:", req.body);
+console.log("Validation result:", validationResult);
+```
+
+---
+
+## 🎯 FUTURE ENHANCEMENTS
+
+### Planned Features
+1. **Video Consultation**: Integration with video conferencing
+2. **Mobile App**: Native iOS and Android applications
+3. **AI Integration**: Symptom checker and diagnosis assistance
+4. **Pharmacy Integration**: Direct prescription ordering
+5. **Insurance Integration**: Insurance claim processing
+6. **Analytics Dashboard**: Advanced reporting and insights
+
+### Scalability Improvements
+1. **Microservices Architecture**: Split into specialized services
+2. **Database Optimization**: Indexing and query optimization
+3. **Caching Layer**: Redis for improved performance
+4. **CDN Integration**: Content delivery for static assets
+5. **Auto-scaling**: Dynamic server resource allocation
+
+---
+
+## 📝 CONCLUSION
+
+The AROGYAM healthcare management system is a comprehensive, full-stack application that demonstrates modern web development practices. It combines:
+
+- **Modern Frontend**: React.js with responsive design
+- **Robust Backend**: Node.js with Express.js
+- **Flexible Database**: MongoDB with Mongoose ODM
+- **Security Best Practices**: JWT authentication and data validation
+- **User-Friendly Interface**: Intuitive design for both patients and doctors
+- **Scalable Architecture**: Modular design for future enhancements
+
+The system successfully addresses the core needs of healthcare management while maintaining code quality, security, and user experience standards.
+
+---
+
+*This documentation provides a comprehensive overview of the AROGYAM system. For specific implementation details or troubleshooting, refer to the individual file comments and code documentation.*

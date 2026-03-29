@@ -1,115 +1,184 @@
-// ========================================
-// IMPORT SECTION - All required dependencies and components
-// ========================================
-// React hooks for state management and side effects
+// Doctor Dashboard - Main component for doctors
 import { useEffect, useState } from "react";
-// Lucide React icons for UI components (Search, User, Calendar, etc.)
+
+// Import icons for UI
 import { Search, User, Calendar as CalendarIcon, Star, Bell, Stethoscope, FileText, Plus, X, AlertCircle, TrendingUp, Clock } from "lucide-react";
-// Custom component for scroll-to-top functionality
+
+// Import components
 import ScrollToTop from "../components/ScrollToTop";
-// React Router hook for navigation between pages
 import { useNavigate } from "react-router-dom";
-// Toast notification library for user feedback
 import toast from "react-hot-toast";
-// Main navigation component for the application
 import Navbar from "../components/Navbar";
 
-// ========================================
 // DOCTOR DASHBOARD COMPONENT - Main Component Definition
-// ========================================
-// Purpose: Central dashboard for doctors to manage appointments, patients, schedules, and medical records
-// Author: Arogyam Healthcare System
-// This component handles all doctor-related functionality including appointment management, SOAP notes, scheduling, and profile management
+// 
+// PURPOSE: Central dashboard for doctors to manage their entire medical practice
+
+
 export default function DoctorDashboard() {
-  // ========================================
+  
   // NAVIGATION AND AUTHENTICATION SETUP
-  // ========================================
-  // React Router hook for programmatic navigation
+ 
+  // 
+  // This section sets up the fundamental navigation and authentication
+  // infrastructure that the entire dashboard depends on. These values are
+  // retrieved from localStorage where they were stored during user login.
+ 
   const navigate = useNavigate();
   
-  // Authentication tokens and user information from localStorage
-  // These are stored when user logs in and used for API authentication
-  const token = localStorage.getItem("token");        // JWT token for API authentication
-  const userRole = localStorage.getItem("role");       // User role (doctor, admin, patient)
-  const userName = localStorage.getItem("userName");   // User's display name
+  // Authentication Data from localStorage
+  // These values are stored in localStorage when user successfully logs in
+  // They persist across page refreshes and browser sessions
   
-  // ========================================
-  // DEBUG LOGGING - Development and troubleshooting
-  // ========================================
-  // Console logs for debugging authentication and user state
-  // These help identify issues during development and testing
-  console.log("=== DOCTOR DASHBOARD DEBUG ===");
-  console.log("Token:", !!token);                    // Boolean check if token exists
-  console.log("User Role:", userRole);               // Current user's role
-  console.log("User Name:", userName);              // Current user's name
+  // JWT Authentication Token
+ 
+  const token = localStorage.getItem("token");        // JWT token for API calls
   
-  // ========================================
+  // User Role Identifier
+  // Purpose: Determines user's permissions and accessible features
+  // Values: "doctor", "patient", "admin"
+  // Usage: Controls UI rendering, API access, and navigation routing
+  const userRole = localStorage.getItem("role");       // User role verification
+  
+  // User Display Name
+  // Purpose: Personalized user experience and UI display
+  // Usage: Shown in navigation, profile sections, and greetings
+  const userName = localStorage.getItem("userName");      // User display name
+  
+  // DEVELOPMENT DEBUGGING - Development and Troubleshooting Tools
+  
+  
+  console.log("DOCTOR DASHBOARD DEBUG");
+  console.log("Token:", !!token);
+  console.log("User Role:", userRole);
+  console.log("User Name:", userName);
+  
   // STATE MANAGEMENT - Component State Variables
-  // ========================================
+  // 
+  // This section defines all the state variables that control the component's
+  // behavior and data. Each state variable serves a specific purpose in managing
+  // the doctor's dashboard functionality.
+  // 
+  const [activeTab, setActiveTab] = useState("overview");  // Current active tab
   
-  // Core data states - Main application data
-  const [appointments, setAppointments] = useState([]);           // Array of doctor's appointments
-  const [activeTab, setActiveTab] = useState("appointments");   // Currently active tab (appointments/schedule)
-  const [profile, setProfile] = useState(null);               // Doctor's profile information object
-  const [editingProfile, setEditingProfile] = useState(false);    // Boolean for profile edit mode
-  const [editForm, setEditForm] = useState({});             // Form data for profile editing
-  const [loading, setLoading] = useState(true);               // Loading state for async operations
+  // Doctor Profile State
+  // Purpose: Stores the doctor's professional and personal information
+  const [profile, setProfile] = useState(null);              // User profile data
   
-  // Statistics and filtering states
-  const [stats, setStats] = useState({ total: 0, approved: 0, completed: 0 }); // Appointment statistics
-  const [filterStatus, setFilterStatus] = useState("all");  // Filter for appointments (all/approved/completed)
+  // Appointments State
+  // Purpose: Stores all appointments for the current doctor
+  const [appointments, setAppointments] = useState([]);         // User appointments
+  // Loading State
+  // Purpose: Indicates when async operations are in progress
+  const [loading, setLoading] = useState(true);               
+  // Search Query State
+  // Purpose: Stores the search query for finding appointments by patient name
+  const [searchQuery, setSearchQuery] = useState("");
+  // STATISTICS AND FILTERING STATES - Dashboard Analytics
+  // These states manage the dashboard's analytical and filtering capabilities
+  // Appointment Statistics State
+  // Purpose: Stores calculated statistics about appointments
+  const [stats, setStats] = useState({ total: 0, approved: 0, completed: 0 }); 
   
-  // Modal visibility states - Control which modals are shown
-  const [selectedAppointment, setSelectedAppointment] = useState(null);  // Currently selected appointment object
-  const [showSOAPModal, setShowSOAPModal] = useState(false);        // SOAP note modal visibility
-  const [showReportModal, setShowReportModal] = useState(false);      // Prescription upload modal visibility
+  // Appointment Filter State
+  // Purpose: Controls which appointments are displayed based on status
+  const [filterStatus, setFilterStatus] = useState("all");  
+  // MODAL VISIBILITY STATES - UI Modal Controls
+  // These states control which modal dialogs are currently visible 
+  // Selected Appointment State
+  // Purpose: Stores the appointment currently being viewed/edited
+  const [selectedAppointment, setSelectedAppointment] = useState(null);  
   
-  // SOAP note form data - Medical consultation data structure
+  // SOAP Note Modal State
+  // Purpose: Controls visibility of SOAP note creation modal
+  const [showSOAPModal, setShowSOAPModal] = useState(false);        
+  
+  // Prescription Upload Modal State
+  // Purpose: Controls visibility of prescription upload modal
+  const [showReportModal, setShowReportModal] = useState(false);      
+  // MEDICAL DATA STATES - Patient Medical Information
+  // These states manage medical and patient-related data
+  // SOAP Note Form Data State
+  // Purpose: Stores the SOAP note form data as user fills it out
   const [soapData, setSoapData] = useState({
     subjective: "",           // Patient's reported symptoms and complaints
-    objective: "",           // Doctor's objective observations and findings
-    assessment: "",          // Doctor's diagnosis and assessment
-    plan: "",               // Treatment plan and recommendations
+    objective: "",           // Doctor's objective observations and clinical findings
+    assessment: "",          // Doctor's diagnosis and medical assessment
+    plan: "",               // Treatment plan, medications, and recommendations
     followUp: { date: "", notes: "", type: "in_person" }  // Follow-up appointment details
   });
   
-  // File and patient management states
-  const [selectedFile, setSelectedFile] = useState(null);    // Selected prescription file for upload
-  const [patientHistory, setPatientHistory] = useState(null); // Patient's medical history data
-  const [showPatientModal, setShowPatientModal] = useState(false); // Patient history modal visibility
-  const [searchPatientId, setSearchPatientId] = useState(""); // Search input for patient ID
+  // File Upload State
+  // Purpose: Stores the selected prescription file for upload
+  const [selectedFile, setSelectedFile] = useState(null);    
   
-  // Schedule management states
-  const [schedules, setSchedules] = useState([]);           // Array of doctor's availability schedules
-  const [showScheduleModal, setShowScheduleModal] = useState(false); // Schedule creation modal visibility
-  const [scheduleForm, setScheduleForm] = useState({         // Form data for schedule creation
-    date: "",                    // Selected date for schedule
-    timeSlots: [{ startTime: "", endTime: "" }], // Array of time slots for the day
-    isRecurring: false,          // Whether schedule repeats
-    recurringPattern: ""         // Pattern for recurring schedules (daily/weekly/monthly)
+  // Patient History State
+  // Purpose: Stores medical history data for a selected patient
+  const [patientHistory, setPatientHistory] = useState(null); 
+  
+  // Patient Modal State
+  // Purpose: Controls visibility of patient history modal
+  const [showPatientModal, setShowPatientModal] = useState(false); 
+  // Patient Search State
+  // Purpose: Stores the search query for finding patients by ID
+  const [searchPatientId, setSearchPatientId] = useState(""); 
+  
+  // Notifications State
+  // Purpose: Stores notifications for the doctor
+  const [notifications, setNotifications] = useState([]); 
+  
+  // Notifications Modal State
+  // Purpose: Controls visibility of notifications modal
+  const [showNotifications, setShowNotifications] = useState(false); 
+  
+  // SCHEDULE MANAGEMENT STATES - Doctor Availability
+  // These states manage the doctor's availability scheduling system
+
+  // Schedules State
+  // Purpose: Stores all availability schedules for the doctor
+  const [schedules, setSchedules] = useState([]);           
+  
+  // Schedule Modal State
+  // Purpose: Controls visibility of schedule creation modal
+  const [showScheduleModal, setShowScheduleModal] = useState(false); 
+  
+  // Schedule Form State
+  // Purpose: Stores the schedule creation form data
+  const [scheduleForm, setScheduleForm] = useState({         
+    date: "",                    // Selected date for availability
+    timeSlots: [{ startTime: "", endTime: "" }], // Array of available time slots for the day
+    isRecurring: false,          // Whether this schedule repeats (daily/weekly/monthly)
+    recurringPattern: ""         // Pattern for recurring schedules
   });
 
+  // Component lifecycle hooks
   useEffect(() => {
+    // Authentication check
     if (!token) {
       navigate("/login");
       return;
     }
-    
+    // Role verification
     if (userRole !== "doctor") {
-      console.log("=== ROLE MISMATCH ===");
-      console.log("Expected: doctor, Got:", userRole);
+      console.log("ROLE MISMATCH");
       toast.error(`Access denied. This dashboard is for doctors only. Your role: ${userRole}`);
       navigate(`/${userRole}`);
       return;
     }
-    
+    // Load data
     loadData();
   }, [token, userRole, navigate]);
 
+  // Data loading functions
   const loadData = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchAppointments(), fetchProfile(), fetchSchedules()]);
+      // Load data in parallel
+      await Promise.all([
+        fetchAppointments(),
+        fetchProfile(),
+        fetchSchedules()
+      ]);
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
@@ -117,24 +186,41 @@ export default function DoctorDashboard() {
     }
   };
 
+  // APPOINTMENT DATA FETCHING
+ 
+  
+  // Fetch Appointments Function
+  // Purpose: Retrieves all appointments for the current doctor from the API
   const fetchAppointments = async () => {
     try {
+      // Debug logging - track API call initiation
       console.log("=== FETCHING APPOINTMENTS ===");
+      
+      // API call to fetch appointments
+      // Headers include JWT token for authentication
       const res = await fetch("http://localhost:5000/api/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      // Log response status for debugging
       console.log("Response status:", res.status);
       
+      // HTTP Error Handling
+      // Check if response is successful (status 200-299)
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       
+      // Parse JSON response
       const data = await res.json();
       console.log("Raw API response:", data);
       
+      // Success Handling - Process and store appointments
       if (data.success && data.appointments) {
+        // Log successful data retrieval
         console.log("Appointments found:", data.appointments.length);
+        
+        // Update appointments state - triggers UI re-render
         setAppointments(data.appointments);
         
         // Update stats immediately
