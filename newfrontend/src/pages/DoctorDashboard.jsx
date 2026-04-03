@@ -19,18 +19,9 @@ export default function DoctorDashboard() {
   
   // NAVIGATION AND AUTHENTICATION SETUP
  
-  // 
-  // This section sets up the fundamental navigation and authentication
-  // infrastructure that the entire dashboard depends on. These values are
-  // retrieved from localStorage where they were stored during user login.
- 
   const navigate = useNavigate();
   
   // Authentication Data from localStorage
-  // These values are stored in localStorage when user successfully logs in
-  // They persist across page refreshes and browser sessions
-  
-  // JWT Authentication Token
  
   const token = localStorage.getItem("token");        // JWT token for API calls
   
@@ -85,8 +76,6 @@ export default function DoctorDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");  
   // MODAL VISIBILITY STATES - UI Modal Controls
   // These states control which modal dialogs are currently visible 
-  // Selected Appointment State
-  // Purpose: Stores the appointment currently being viewed/edited
   const [selectedAppointment, setSelectedAppointment] = useState(null);  
   
   // SOAP Note Modal State
@@ -98,8 +87,6 @@ export default function DoctorDashboard() {
   const [showReportModal, setShowReportModal] = useState(false);      
   // MEDICAL DATA STATES - Patient Medical Information
   // These states manage medical and patient-related data
-  // SOAP Note Form Data State
-  // Purpose: Stores the SOAP note form data as user fills it out
   const [soapData, setSoapData] = useState({
     subjective: "",           // Patient's reported symptoms and complaints
     objective: "",           // Doctor's objective observations and clinical findings
@@ -107,7 +94,6 @@ export default function DoctorDashboard() {
     plan: "",               // Treatment plan, medications, and recommendations
     followUp: { date: "", notes: "", type: "in_person" }  // Follow-up appointment details
   });
-  
   // File Upload State
   // Purpose: Stores the selected prescription file for upload
   const [selectedFile, setSelectedFile] = useState(null);    
@@ -123,6 +109,27 @@ export default function DoctorDashboard() {
   // Purpose: Stores the search query for finding patients by ID
   const [searchPatientId, setSearchPatientId] = useState(""); 
   
+  // Profile Editing State
+  // Purpose: Controls whether profile is in edit mode
+  const [editingProfile, setEditingProfile] = useState(false);
+
+  // Edit Form State
+  // Purpose: Stores profile form data during editing
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    gender: "",
+    specialization: "",
+    qualification: "",
+    experience: "",
+    consultationFee: "",
+    medicalLicense: "",
+    hospitalAffiliation: "",
+    languages: "",
+    bio: ""
+  });
+
   // Notifications State
   // Purpose: Stores notifications for the doctor
   const [notifications, setNotifications] = useState([]); 

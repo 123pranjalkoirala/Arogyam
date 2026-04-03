@@ -1,25 +1,8 @@
-// ========================================
 // AROGYAM BACKEND SERVER - Main Server Entry Point
 // 
 // PURPOSE: This is the main entry point for AROGYAM healthcare management system backend.
 // It initializes Express.js server, configures middleware, registers routes,
 // and starts server to handle API requests from frontend.
-// 
-// ARCHITECTURE: Follows Express.js best practices with modular routing,
-// middleware configuration, and proper error handling.
-// 
-// AUTHOR: Arogyam Healthcare System Development Team
-// VERSION: 2.0 (Enhanced with comprehensive commenting)
-// LAST UPDATED: 2026
-
-// IMPORT SECTION - Required Dependencies and Modules
-// 
-// This section imports all necessary modules and dependencies for the server.
-// Each import serves a specific purpose in the application architecture.
-
-// Express.js Framework - Core web application framework
-// Purpose: Provides web server functionality and routing capabilities
-// Usage: Creates Express application instance and handles HTTP requests
 import express from "express";
 
 // CORS Middleware - Cross-Origin Resource Sharing
@@ -36,17 +19,10 @@ import dotenv from "dotenv";
 // Purpose: Establishes and maintains connection to MongoDB database
 // Usage: Called during server startup to connect to the database
 import connectDB from "./config/db.js";
-
-// ========================================
-// ROUTE IMPORTS - API Route Handlers
-// ========================================
 // 
 // These imports bring in all the API route handlers for different features.
 // Each route file handles specific functionality and follows RESTful principles.
-
-// Authentication Routes - User registration, login, and authentication
-// Endpoints: /api/auth/register, /api/auth/login, /api/auth/me
-// Purpose: Handles user authentication and JWT token management
+ 
 import authRoutes from "./routes/auth.js";
 
 // Appointments Routes - Appointment management system
@@ -103,70 +79,36 @@ import notificationsRoutes from "./routes/notifications.js";
 // Purpose: Provides utilities for working with file and directory paths
 // Usage: Used for serving static files from the uploads directory
 import path from "path";
-
-// ========================================
-// ENVIRONMENT CONFIGURATION
-// ========================================
 // 
 // Load environment variables from .env file into process.env
 // This must be done before accessing any environment variables
-// 
-// Expected variables in .env file:
-// - MONGODB_URI: MongoDB connection string
-// - JWT_SECRET: Secret key for JWT token signing
-// - PORT: Server port number (defaults to 5000)
-// - EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS: Email configuration
+ 
 dotenv.config();
-
-// ========================================
-// DATABASE CONNECTION
-// ========================================
 // 
 // Establish connection to MongoDB database
 // This must be done before starting the server to ensure database availability
-// 
-// Connection details are loaded from environment variables
-// The connection is established once and maintained for the server lifetime
+ 
 connectDB();
-
-// ========================================
-// EXPRESS APPLICATION INITIALIZATION
-// ========================================
 // 
 // Create Express application instance
 // This app object will be used to configure middleware and routes
 const app = express();
-
-// ========================================
-// MIDDLEWARE CONFIGURATION
-// ========================================
 // 
 // Configure middleware functions that process all incoming requests
 // Middleware runs in the order they are defined
 
 // JSON Body Parser Middleware
 // Purpose: Parses incoming JSON request bodies
-// Usage: Converts JSON strings in request bodies to JavaScript objects
-// Essential for handling POST and PUT requests with JSON data
+ 
 app.use(express.json());
 
 // CORS Middleware Configuration
 // Purpose: Enables Cross-Origin Resource Sharing for frontend-backend communication
-// Configuration: Allows requests from http://localhost:5173 (React development server)
-// Credentials: true - Allows cookies and authentication headers to be sent
-// Security: Restricts CORS to specific frontend domain for security
+ 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-
-// ========================================
-// ROUTE REGISTRATION
-// ========================================
-// 
 // Register all API routes with the Express application
 // Each route handles a specific feature area of the application
-// Routes are mounted with prefixes to organize the API structure
 
-// Authentication Routes - User management and authentication
-// Mount Point: /api/auth
 // Handles: Registration, login, profile retrieval, token validation
 app.use("/api/auth", authRoutes);
 
@@ -226,17 +168,10 @@ app.use("/uploads", express.static(path.resolve("uploads")));
 // Mount Point: /api/notifications
 // Handles: User notifications, alerts, and messaging system
 app.use("/api/notifications", notificationsRoutes);
-
-// ========================================
-// SERVER STARTUP
-// ========================================
+ 
 // 
 // Start the Express server and begin listening for incoming requests
-// 
-// Port Configuration:
-// - Uses PORT from environment variables if available
-// - Defaults to 5000 if not specified in environment
-// - Environment variables allow flexible deployment configurations
+ 
 
 const PORT = process.env.PORT || 5000;
 
@@ -244,31 +179,4 @@ const PORT = process.env.PORT || 5000;
 // Callback function logs successful server startup
 // This indicates the server is ready to handle API requests
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
-
-// ========================================
-// SERVER LIFECYCLE NOTES
-// ========================================
-// 
-// 1. Startup Sequence:
-//    - Load environment variables
-//    - Connect to database
-//    - Initialize Express app
-//    - Configure middleware
-//    - Register routes
-//    - Start server
-// 
-// 2. Request Handling:
-//    - Incoming requests pass through middleware in order
-//    - Routes handle specific endpoint logic
-//    - Responses are sent back to frontend
-// 
-// 3. Error Handling:
-//    - Global error handler catches unhandled errors
-//    - Database errors are logged and handled gracefully
-//    - Validation errors return appropriate HTTP status codes
-// 
-// 4. Security Considerations:
-//    - CORS configured for specific frontend domain
-//    - Static files served from secure directory
-//    - Environment variables protect sensitive configuration
-//    - JWT authentication protects API endpoints
+ 
