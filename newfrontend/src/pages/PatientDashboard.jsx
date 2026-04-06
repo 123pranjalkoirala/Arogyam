@@ -1163,7 +1163,7 @@ export default function PatientDashboard() {
 
               {/* Profile */}
               {activeTab === "profile" && profile && (
-                <div className="bg-white rounded-2xl shadow-xl p-10">
+                <div className="bg-white rounded-2xl shadow-xl p-10 w-full">
                   <div className="flex justify-between items-center mb-8">
                     <h2 className="text-3xl font-bold text-gray-900">My Profile</h2>
                     {!editingProfile ? (
@@ -1194,22 +1194,22 @@ export default function PatientDashboard() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="flex justify-center">
+                  <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    <div className="flex-shrink-0 lg:w-80">
                       {profile.picture ? (
                         <img
                           src={profile.picture}
                           alt={profile.name}
-                          className="w-32 h-32 rounded-full object-cover border-4 border-[#0F9D76]"
+                          className="w-48 h-48 rounded-full object-cover border-4 border-[#0F9D76] mx-auto"
                         />
                       ) : (
-                        <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-[#0F9D76] flex items-center justify-center">
-                          <User className="w-12 h-12 text-gray-400" />
+                        <div className="w-48 h-48 rounded-full bg-gray-200 border-4 border-[#0F9D76] flex items-center justify-center mx-auto">
+                          <User className="w-20 h-20 text-gray-400" />
                         </div>
                       )}
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="flex-1 w-full min-w-0 space-y-6">
                       {!editingProfile ? (
                         <>
                           <div>
@@ -1245,14 +1245,14 @@ export default function PatientDashboard() {
                           </div>
                         </>
                       ) : (
-                        <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                             <input
                               type="text"
                               value={editForm.name || ""}
                               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none text-base"
                             />
                           </div>
 
@@ -1262,7 +1262,7 @@ export default function PatientDashboard() {
                               type="email"
                               value={editForm.email || ""}
                               onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none text-base"
                             />
                           </div>
 
@@ -1272,7 +1272,7 @@ export default function PatientDashboard() {
                               type="tel"
                               value={editForm.phone || ""}
                               onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none text-base"
                             />
                           </div>
 
@@ -1282,7 +1282,7 @@ export default function PatientDashboard() {
                               type="date"
                               value={editForm.dateOfBirth ? new Date(editForm.dateOfBirth).toISOString().split('T')[0] : ""}
                               onChange={(e) => setEditForm({ ...editForm, dateOfBirth: e.target.value })}
-                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none text-base"
                             />
                           </div>
 
@@ -1291,25 +1291,25 @@ export default function PatientDashboard() {
                             <select
                               value={editForm.gender || ""}
                               onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
-                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none text-base"
                             >
-                              <option value="">Select gender</option>
+                              <option value="">Select Gender</option>
                               <option value="male">Male</option>
                               <option value="female">Female</option>
                               <option value="other">Other</option>
                             </select>
                           </div>
 
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                             <textarea
                               value={editForm.address || ""}
                               onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                               rows={3}
-                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none resize-none"
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0F9D76] focus:ring-2 focus:ring-[#0F9D76]/20 outline-none text-base"
                             />
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
