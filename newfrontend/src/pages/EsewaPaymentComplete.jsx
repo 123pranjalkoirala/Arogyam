@@ -15,7 +15,7 @@ export default function EsewaPaymentComplete() {
       
       const form = document.createElement("form");
       form.method = "POST";
-      form.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"; // Correct test API endpoint
+      form.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"; 
 
       Object.entries(paymentParams).forEach(([key, value]) => {
         const input = document.createElement("input");

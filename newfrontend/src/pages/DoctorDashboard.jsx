@@ -890,99 +890,99 @@ export default function DoctorDashboard() {
                       </button>
                     )}
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl">
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="bg-white border border-gray-200 rounded-lg p-8 w-full">
+                    <div className="flex flex-col lg:flex-row gap-8 items-start">
                       {/* Profile Picture */}
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 lg:w-80">
                         {profile.picture ? (
                           <img
                             src={profile.picture}
                             alt={profile.name}
-                            className="w-32 h-32 rounded-full object-cover border-4 border-[#1E88E5] flex-shrink-0"
+                            className="w-48 h-48 rounded-full object-cover border-4 border-[#1E88E5] flex-shrink-0 mx-auto"
                             onError={(e) => e.target.src = "https://i.pravatar.cc/150?img=47"}
                           />
                         ) : (
-                          <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-[#1E88E5] flex items-center justify-center">
-                            <User className="w-12 h-12 text-gray-400" />
+                          <div className="w-48 h-48 rounded-full bg-gray-200 border-4 border-[#1E88E5] flex items-center justify-center mx-auto">
+                            <User className="w-20 h-20 text-gray-400" />
                           </div>
                         )}
                       </div>
 
-                      {/* Profile Information */}
-                      <div className="flex-1 space-y-4">
+                      {/* Profile Information - Takes all remaining space */}
+                      <div className="flex-1 w-full min-w-0 space-y-6">
                         {editingProfile ? (
                           <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                                 <input
                                   type="text"
                                   value={editForm.name}
                                   onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                                 <input
                                   type="email"
                                   value={editForm.email}
                                   onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                                 <input
                                   type="tel"
                                   value={editForm.phone}
                                   onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Specialization</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
                                 <input
                                   type="text"
                                   value={editForm.specialization}
                                   onChange={(e) => setEditForm({...editForm, specialization: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Experience (years)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Experience (years)</label>
                                 <input
                                   type="number"
                                   value={editForm.experience}
                                   onChange={(e) => setEditForm({...editForm, experience: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Consultation Fee (Rs.)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Consultation Fee (Rs.)</label>
                                 <input
                                   type="number"
                                   value={editForm.consultationFee}
                                   onChange={(e) => setEditForm({...editForm, consultationFee: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Qualification</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Qualification</label>
                                 <input
                                   type="text"
                                   value={editForm.qualification}
                                   onChange={(e) => setEditForm({...editForm, qualification: e.target.value})}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                               <div className="md:col-span-2">
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Bio</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                                 <textarea
                                   value={editForm.bio}
                                   onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
-                                  rows={3}
-                                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-sm"
+                                  rows={4}
+                                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none text-base"
                                 />
                               </div>
                             </div>
@@ -990,51 +990,51 @@ export default function DoctorDashboard() {
                         ) : (
                           <>
                             <div>
-                              <label className="block text-xs font-medium text-gray-600">Full Name</label>
-                              <p className="text-sm font-medium text-gray-900">Dr. {profile.name || "Not provided"}</p>
+                              <label className="block text-sm font-medium text-gray-600 mb-2">Full Name</label>
+                              <p className="text-base font-medium text-gray-900">Dr. {profile.name || "Not provided"}</p>
                             </div>
 
                             <div>
-                              <label className="block text-xs font-medium text-gray-600">Email Address</label>
-                              <p className="text-sm text-gray-700">{profile.email || "Not provided"}</p>
+                              <label className="block text-sm font-medium text-gray-600 mb-2">Email Address</label>
+                              <p className="text-base text-gray-700">{profile.email || "Not provided"}</p>
                             </div>
                               <div>
-                              <label className="block text-xs font-medium text-gray-600">Phone Number</label>
-                              <p className="text-sm text-gray-700">{profile.phone || "Not provided"}</p>
+                              <label className="block text-sm font-medium text-gray-600 mb-2">Phone Number</label>
+                              <p className="text-base text-gray-700">{profile.phone || "Not provided"}</p>
                             </div>
 
                             {profile.specialization && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">Specialization</label>
-                                <p className="text-sm text-gray-700">{profile.specialization}</p>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">Specialization</label>
+                                <p className="text-base text-gray-700">{profile.specialization}</p>
                               </div>
                             )}
 
                             {profile.experience && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">Experience</label>
-                                <p className="text-sm text-gray-700">{profile.experience} years</p>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">Experience</label>
+                                <p className="text-base text-gray-700">{profile.experience} years</p>
                               </div>
                             )}
 
                             {profile.qualification && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">Qualification</label>
-                                <p className="text-sm text-gray-700">{profile.qualification}</p>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">Qualification</label>
+                                <p className="text-base text-gray-700">{profile.qualification}</p>
                               </div>
                             )}
 
                             {profile.consultationFee && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">Consultation Fee</label>
-                                <p className="text-sm text-gray-700">Rs. {profile.consultationFee}</p>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">Consultation Fee</label>
+                                <p className="text-base text-gray-700">Rs. {profile.consultationFee}</p>
                               </div>
                             )}
 
                             {profile.bio && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600">Bio</label>
-                                <p className="text-sm text-gray-700">{profile.bio}</p>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">Bio</label>
+                                <p className="text-base text-gray-700">{profile.bio}</p>
                               </div>
                             )}
                           </>
