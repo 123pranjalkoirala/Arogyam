@@ -152,10 +152,11 @@ export default function DoctorDashboard() {
   // Schedule Form State
   // Purpose: Stores the schedule creation form data
   const [scheduleForm, setScheduleForm] = useState({         
-    date: "",                    // Selected date for availability
-    timeSlots: [{ startTime: "", endTime: "" }], // Array of available time slots for the day
+    dates: [""],                   // Array of selected dates for availability (up to 5 dates) - starts with one empty date
+    timeSlots: [{ startTime: "", endTime: "" }], // Array of available time slots for each day
     isRecurring: false,          // Whether this schedule repeats (daily/weekly/monthly)
-    recurringPattern: ""         // Pattern for recurring schedules
+    recurringPattern: "",         // Pattern for recurring schedules
+    overwriteExisting: false     // Whether to overwrite existing schedules
   });
 
   // Component lifecycle hooks
@@ -319,35 +320,101 @@ export default function DoctorDashboard() {
   const createSchedule = async () => {
     try {
       // Validate form
-      if (!scheduleForm.date || scheduleForm.timeSlots.some(slot => !slot.startTime || !slot.endTime)) {
-        toast.error("Please fill all required fields");
+      const selectedDate = scheduleForm.dates[0];
+      
+      if (!selectedDate || scheduleForm.timeSlots.some(slot => !slot.startTime || !slot.endTime)) {
+        toast.error("Please select a date and fill all time slots");
         return;
       }
 
+      // Filter out empty time slots
+      const validTimeSlots = scheduleForm.timeSlots.filter(slot => slot.startTime && slot.endTime);
+      
+      if (validTimeSlots.length === 0) {
+        toast.error("Please add at least one time slot");
+        return;
+      }
+
+      // Create form data
+      const formData = {
+        dates: [selectedDate],
+        timeSlots: validTimeSlots,
+        isRecurring: scheduleForm.isRecurring,
+        recurringPattern: scheduleForm.recurringPattern,
+        overwriteExisting: scheduleForm.overwriteExisting
+      };
+
+      console.log("=== FRONTEND SCHEDULE CREATION ===");
+      console.log("Form data:", formData);
+
+      // Send schedule data
       const res = await fetch("http://localhost:5000/api/doctor-schedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(scheduleForm)
+        body: JSON.stringify(formData)
       });
       
       const data = await res.json();
+      
+      console.log("Backend response:", data);
+      
       if (data.success) {
-        toast.success("Schedule created successfully");
+        toast.success(`Schedule created successfully with ${validTimeSlots.length} time slot(s)`);
         setShowScheduleModal(false);
         setScheduleForm({
-          date: "",
+          dates: [""],
           timeSlots: [{ startTime: "", endTime: "" }],
           isRecurring: false,
-          recurringPattern: ""
+          recurringPattern: "",
+          overwriteExisting: false
         });
         fetchSchedules();
       } else {
-        toast.error(data.message || "Failed to create schedule");
+        // Handle partial success or complete failure
+        if (data.schedules && data.schedules.length > 0) {
+          toast.success(`Schedule created with ${validTimeSlots.length} time slot(s)`);
+          if (data.errors && data.errors.length > 0) {
+            // Show specific error messages
+            data.errors.forEach(error => {
+              toast.error(`${error.date}: ${error.message}`);
+            });
+          }
+          setShowScheduleModal(false);
+          setScheduleForm({
+            dates: [""],
+            timeSlots: [{ startTime: "", endTime: "" }],
+            isRecurring: false,
+            recurringPattern: "",
+            overwriteExisting: false
+          });
+          fetchSchedules();
+        } else {
+        // Complete failure - show all errors
+        console.log("Complete failure - errors:", data.errors);
+        if (data.errors && data.errors.length > 0) {
+          data.errors.forEach(error => {
+            console.log("Error detail:", error);
+            toast.error(`${error.date}: ${error.message}`);
+          });
+          
+          // If error is about existing schedule, suggest using overwrite
+          const hasExistingScheduleError = data.errors.some(error => 
+            error.message.includes("Schedule already exists")
+          );
+          
+          if (hasExistingScheduleError) {
+            toast("Tip: Check 'Overwrite existing schedules' to replace existing schedules");
+          }
+        } else {
+          toast.error(data.message || "Failed to create schedule");
+        }
+      }
       }
     } catch (err) {
+      console.error("Error creating schedule:", err);
       toast.error("Failed to create schedule");
     }
   };
@@ -371,17 +438,83 @@ export default function DoctorDashboard() {
     }
   };
 
+  const clearExistingSchedule = async () => {
+    try {
+      const selectedDate = scheduleForm.dates[0];
+      if (!selectedDate) {
+        toast.error("Please select a date first");
+        return;
+      }
+
+      // Find existing schedule for this date
+      const existingSchedule = schedules.find(s => 
+        new Date(s.date).toDateString() === new Date(selectedDate).toDateString()
+      );
+
+      if (!existingSchedule) {
+        toast.error("No existing schedule found for this date");
+        return;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/doctor-schedule/${existingSchedule._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Existing schedule cleared successfully");
+        fetchSchedules();
+      } else {
+        toast.error(data.message || "Failed to clear existing schedule");
+      }
+    } catch (err) {
+      toast.error("Failed to clear existing schedule");
+    }
+  };
+
   const addTimeSlot = () => {
-    setScheduleForm({
-      ...scheduleForm,
-      timeSlots: [...scheduleForm.timeSlots, { startTime: "", endTime: "" }]
-    });
+    if (scheduleForm.timeSlots.length < 5) {
+      setScheduleForm({
+        ...scheduleForm,
+        timeSlots: [...scheduleForm.timeSlots, { startTime: "", endTime: "" }]
+      });
+    } else {
+      toast.error("Maximum 5 time slots allowed per day");
+    }
   };
 
   const removeTimeSlot = (index) => {
     setScheduleForm({
       ...scheduleForm,
       timeSlots: scheduleForm.timeSlots.filter((_, i) => i !== index)
+    });
+  };
+
+  const addScheduleDate = () => {
+    if (scheduleForm.dates.length < 5) {
+      setScheduleForm({
+        ...scheduleForm,
+        dates: [...scheduleForm.dates, ""]
+      });
+    }
+  };
+
+  const removeScheduleDate = (index) => {
+    if (scheduleForm.dates.length > 1) {
+      setScheduleForm({
+        ...scheduleForm,
+        dates: scheduleForm.dates.filter((_, i) => i !== index)
+      });
+    }
+  };
+
+  const updateScheduleDate = (index, value) => {
+    const newDates = [...scheduleForm.dates];
+    newDates[index] = value;
+    setScheduleForm({
+      ...scheduleForm,
+      dates: newDates
     });
   };
 
@@ -1673,52 +1806,75 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Date Selection */}
+              {/* Date Selection - Single Date Focus */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                <input
-                  type="date"
-                  value={scheduleForm.date}
-                  onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
-                  min={new Date().toISOString().split('T')[0]}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Date for Availability
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="date"
+                    value={scheduleForm.dates[0] || ""}
+                    onChange={(e) => updateScheduleDate(0, e.target.value)}
+                    className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  <button
+                    onClick={clearExistingSchedule}
+                    className="px-4 py-3 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-all"
+                  >
+                    Clear Existing
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select a date and add up to 5 different time slots for that day. Use "Clear Existing" to remove any existing schedule for that date.
+                </p>
               </div>
 
               {/* Time Slots */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Time Slots</label>
-                  <button
-                    onClick={addTimeSlot}
-                    className="px-3 py-1 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0E8A6A] transition-all"
-                  >
-                    Add Time Slot
-                  </button>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Time Slots (Add up to 5 time slots for this day)
+                  </label>
+                  {scheduleForm.timeSlots.length < 5 && (
+                    <button
+                      onClick={addTimeSlot}
+                      className="px-3 py-1 bg-[#0F9D76] text-white rounded-lg text-sm font-medium hover:bg-[#0E8A6A] transition-all"
+                    >
+                      Add Time Slot ({scheduleForm.timeSlots.length}/5)
+                    </button>
+                  )}
                 </div>
                 
                 <div className="space-y-3">
                   {scheduleForm.timeSlots.map((slot, index) => (
-                    <div key={index} className="flex gap-3 items-center">
-                      <input
-                        type="time"
-                        value={slot.startTime}
-                        onChange={(e) => updateTimeSlot(index, 'startTime', e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
-                        placeholder="Start Time"
-                      />
-                      <span className="text-gray-500">to</span>
-                      <input
-                        type="time"
-                        value={slot.endTime}
-                        onChange={(e) => updateTimeSlot(index, 'endTime', e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
-                        placeholder="End Time"
-                      />
+                    <div key={index} className="flex gap-3 items-center bg-gray-50 p-3 rounded-lg">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-600 mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          value={slot.startTime}
+                          onChange={(e) => updateTimeSlot(index, 'startTime', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                          placeholder="Start Time"
+                        />
+                      </div>
+                      <span className="text-gray-500 self-center">to</span>
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-600 mb-1">End Time</label>
+                        <input
+                          type="time"
+                          value={slot.endTime}
+                          onChange={(e) => updateTimeSlot(index, 'endTime', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                          placeholder="End Time"
+                        />
+                      </div>
                       {scheduleForm.timeSlots.length > 1 && (
                         <button
                           onClick={() => removeTimeSlot(index)}
-                          className="p-2 text-red-500 hover:text-red-700"
+                          className="p-2 text-red-500 hover:text-red-700 self-center"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -1726,6 +1882,12 @@ export default function DoctorDashboard() {
                     </div>
                   ))}
                 </div>
+                
+                {scheduleForm.timeSlots.length >= 5 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Maximum 5 time slots reached for this day
+                  </p>
+                )}
               </div>
 
               {/* Recurring Options */}
@@ -1754,6 +1916,22 @@ export default function DoctorDashboard() {
                     </select>
                   </div>
                 )}
+              </div>
+
+              {/* Overwrite Existing Option */}
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={scheduleForm.overwriteExisting || false}
+                    onChange={(e) => setScheduleForm({...scheduleForm, overwriteExisting: e.target.checked})}
+                    className="rounded border-gray-300 text-[#0F9D76] focus:ring-[#0F9D76]"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Overwrite existing schedules</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Replace existing schedules for the selected dates (only if no appointments are booked)
+                </p>
               </div>
             </div>
 

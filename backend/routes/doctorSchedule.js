@@ -14,12 +14,33 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    const { date, timeSlots, isRecurring, recurringPattern } = req.body;
+    const { date, dates, timeSlots, isRecurring, recurringPattern } = req.body;
 
-    if (!date || !timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+    console.log("=== SCHEDULE CREATION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("dates:", dates);
+    console.log("timeSlots:", timeSlots);
+
+    // Handle both single date and multiple dates
+    const datesToProcess = dates || (date ? [date] : []);
+    
+    // Filter out empty date strings
+    const validDates = datesToProcess.filter(d => d && d.trim() !== "");
+    
+    console.log("datesToProcess:", datesToProcess);
+    console.log("validDates:", validDates);
+
+    if (!validDates || validDates.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: "Date and time slots are required" 
+        message: "At least one valid date is required" 
+      });
+    }
+
+    if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Time slots are required" 
       });
     }
 
@@ -33,32 +54,47 @@ router.post("/", requireAuth, async (req, res) => {
       }
     }
 
-    // Check if schedule already exists for this date
-    const existingSchedule = await DoctorSchedule.findOne({
-      doctorId: req.user.id,
-      date: new Date(date),
-      isActive: true
-    });
+    // Create schedules for each date - ALLOW MULTIPLE SCHEDULES PER DAY
+    const createdSchedules = [];
+    const errors = [];
 
-    if (existingSchedule) {
+    for (const dateToProcess of validDates) {
+      try {
+        console.log("Processing date:", dateToProcess);
+        
+        // Simply create schedule without checking for existing ones
+        // This allows multiple schedules for the same day
+        const schedule = await DoctorSchedule.create({
+          doctorId: req.user.id,
+          date: new Date(dateToProcess),
+          timeSlots,
+          isRecurring: isRecurring || false,
+          recurringPattern: recurringPattern || null
+        });
+
+        createdSchedules.push(schedule);
+        console.log("Schedule created successfully for date:", dateToProcess);
+      } catch (error) {
+        console.error("Error creating schedule for date:", dateToProcess, error);
+        errors.push({ date: dateToProcess, message: error.message });
+      }
+    }
+
+    if (createdSchedules.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: "Schedule already exists for this date" 
+        message: "No schedules were created",
+        errors 
       });
     }
 
-    const schedule = await DoctorSchedule.create({
-      doctorId: req.user.id,
-      date: new Date(date),
-      timeSlots,
-      isRecurring: isRecurring || false,
-      recurringPattern: recurringPattern || null
-    });
+    console.log("Final result - Created:", createdSchedules.length, "Errors:", errors.length);
 
     res.json({ 
       success: true, 
-      message: "Schedule created successfully",
-      schedule 
+      message: `${createdSchedules.length} schedule(s) created successfully`,
+      schedules: createdSchedules,
+      errors: errors.length > 0 ? errors : undefined
     });
   } catch (error) {
     console.error("Create schedule error:", error);
