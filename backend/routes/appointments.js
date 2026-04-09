@@ -8,9 +8,8 @@ import { sendAppointmentNotification } from "../services/emailService.js";
 
 const router = express.Router();
 
-/* =========================
-   CREATE APPOINTMENT (PATIENT)
-========================= */
+   //CREATE APPOINTMENT (PATIENT)
+ 
 router.post("/", requireAuth, async (req, res) => {
   try {
     console.log("=== CREATE APPOINTMENT DEBUG ===");

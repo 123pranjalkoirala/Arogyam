@@ -1,17 +1,6 @@
-// ========================================
+ 
 // REPORT MODEL - MongoDB Schema Definition
-// ========================================
-// 
 // PURPOSE: Defines structure for medical reports and prescription documents in MongoDB.
-// This model manages uploaded medical documents including prescriptions,
-// lab results, and other medical records with SOAP-like fields.
-// 
-// ARCHITECTURE: Uses Mongoose ODM with proper relationships to User and
-// Appointment models, file management, and medical documentation.
-// 
-// AUTHOR: Arogyam Healthcare System Development Team
-// VERSION: 2.0 (Enhanced with comprehensive commenting)
-// LAST UPDATED: 2026
 
 // Mongoose - MongoDB Object Modeling Library
 import mongoose from "mongoose";

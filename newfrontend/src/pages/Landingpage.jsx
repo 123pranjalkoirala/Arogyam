@@ -314,50 +314,50 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
       <main className="min-h-screen bg-white">
         {/* HERO SECTION - Green Theme */}
         <section className="bg-gradient-to-br from-[#E9F7EF] via-white to-[#D6F6EB] pt-24 pb-16">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-block px-4 py-2 bg-[#0F9D76]/10 text-[#0F9D76] rounded-full mb-6 font-semibold text-sm">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="max-w-2xl">
+                <div className="inline-block px-6 py-3 bg-[#0F9D76]/10 text-[#0F9D76] rounded-full mb-8 font-semibold text-lg">
                   Trusted by 10,000+ Patients
                 </div>
                 
-                <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 leading-tight mb-8">
                   Find & Book <span className="text-[#0F9D76]">Verified Doctors</span> Near You
                 </h1>
 
-                <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed">
                   Connect with certified healthcare professionals. Book appointments instantly, consult online, and manage your health records all in one place.
                 </p>
 
                 {/* Find Doctor Button - Improved Placement */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row gap-6 mb-12">
                   <button
                     onClick={() => navigate("/login")}
-                    className="px-8 py-4 bg-[#0F9D76] text-white rounded-xl font-semibold text-lg hover:bg-[#0d8a66] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="px-10 py-5 bg-[#0F9D76] text-white rounded-xl font-bold text-xl hover:bg-[#0d8a66] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     Find Doctors
                   </button>
                   <button
                     onClick={() => navigate("/register")}
-                    className="px-8 py-4 bg-white text-[#0F9D76] border-2 border-[#0F9D76] rounded-xl font-semibold text-lg hover:bg-[#0F9D76]/5 transition-all"
+                    className="px-10 py-5 bg-white text-[#0F9D76] border-2 border-[#0F9D76] rounded-xl font-bold text-xl hover:bg-[#0F9D76]/5 transition-all"
                   >
                     Book Appointment
                   </button>
                 </div>
 
                 {/* Stats - Dynamic */}
-                <div className="grid grid-cols-3 gap-6 mt-12">
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-[#0F9D76]/20">
-                    <div className="text-3xl font-bold text-[#0F9D76]">24/7</div>
-                    <div className="text-sm text-gray-600 font-semibold">Available</div>
+                <div className="grid grid-cols-3 gap-8 mt-16">
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-[#0F9D76]/20">
+                    <div className="text-4xl font-bold text-[#0F9D76]">24/7</div>
+                    <div className="text-base text-gray-600 font-semibold">Available</div>
                   </div>
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-[#0F9D76]/20">
-                    <div className="text-3xl font-bold text-[#0F9D76]">100%</div>
-                    <div className="text-sm text-gray-600 font-semibold">Secure</div>
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-[#0F9D76]/20">
+                    <div className="text-4xl font-bold text-[#0F9D76]">100%</div>
+                    <div className="text-base text-gray-600 font-semibold">Secure</div>
                   </div>
-                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-[#0F9D76]/20">
-                    <div className="text-3xl font-bold text-[#0F9D76]">Easy</div>
-                    <div className="text-sm text-gray-600 font-semibold">Booking</div>
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-[#0F9D76]/20">
+                    <div className="text-4xl font-bold text-[#0F9D76]">Easy</div>
+                    <div className="text-base text-gray-600 font-semibold">Booking</div>
                   </div>
                 </div>
               </div>
@@ -368,15 +368,15 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
                   <div className="absolute inset-0 bg-gradient-to-br from-[#0F9D76]/20 to-transparent rounded-3xl z-10"></div>
                   <img
                     src="/landing page showcase image.webp"
-                    className="w-full max-w-lg rounded-3xl shadow-2xl object-cover h-[500px] transition-transform duration-500 group-hover:scale-105"
+                    className="w-full max-w-2xl rounded-3xl shadow-2xl object-cover h-[600px] transition-transform duration-500 group-hover:scale-105"
                     alt="Healthcare Professional"
                     onError={(e) => {
-                      e.target.src = "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600";
+                      e.target.src = "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800";
                     }}
                   />
-                  <div className="absolute bottom-8 left-8 right-8 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-xl animate-fade-in">
-                    <p className="text-lg font-bold text-[#0F9D76] mb-1">Your Health, Our Priority</p>
-                    <p className="text-sm text-gray-600">Connect with trusted healthcare professionals anytime, anywhere</p>
+                  <div className="absolute bottom-10 left-10 right-10 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl animate-fade-in">
+                    <p className="text-xl font-bold text-[#0F9D76] mb-2">Your Health, Our Priority</p>
+                    <p className="text-base text-gray-600">Connect with trusted healthcare professionals anytime, anywhere</p>
                   </div>
                 </div>
               </div>
@@ -385,15 +385,15 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* SPECIALIZATIONS */}
-        <section id="specializations" className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
+        <section id="specializations" className="py-20 bg-white">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
+            <h2 className="text-5xl font-bold text-center text-gray-900 mb-6">
               Popular Specializations
             </h2>
-            <p className="text-center text-gray-600 mb-12 text-lg">
+            <p className="text-center text-gray-600 mb-16 text-xl">
               Find the right specialist for your health needs
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
               {specializations.map((spec) => (
                 <button
                   key={spec.name}
@@ -409,9 +409,9 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* HEALTH ARTICLES SECTION */}
-        <section id="articles" className="py-16 bg-gradient-to-br from-[#E9F7EF] to-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <section id="articles" className="py-20 bg-gradient-to-br from-[#E9F7EF] to-white">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {healthArticles.map((article) => (
                 <div
                   key={article.id}
@@ -502,12 +502,12 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* FEATURES */}
-        <section id="features" className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+        <section id="features" className="py-20 bg-white">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
+            <h2 className="text-5xl font-bold text-center text-gray-900 mb-16">
               Why Choose AROGYAM?
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {[
                 { icon: "🔍", title: "Find Verified Doctors", desc: "Search from thousands of verified healthcare professionals" },
                 { icon: "📅", title: "Easy Booking", desc: "Book appointments in just a few clicks, 24/7 availability" },
@@ -527,13 +527,13 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* ABOUT SECTION */}
-        <section id="about" className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">About AROGYAM</h2>
+        <section id="about" className="py-20 bg-white">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold text-gray-900 mb-6">About AROGYAM</h2>
               <p className="text-xl text-gray-600">Your trusted healthcare companion</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h3>
                 <p className="text-gray-600 mb-4 leading-relaxed">
@@ -576,14 +576,14 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* CONTACT SECTION - Creative Design */}
-        <section id="contact" className="py-16 bg-gradient-to-br from-[#E9F7EF] via-white to-[#D6F6EB] relative overflow-hidden">
+        <section id="contact" className="py-20 bg-gradient-to-br from-[#E9F7EF] via-white to-[#D6F6EB] relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold text-gray-900 mb-6">Get in Touch</h2>
               <p className="text-xl text-gray-600">We're here to help you with your healthcare needs</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               <div className="bg-white rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 border-2 border-transparent hover:border-[#10B981]">
                 <div className="w-20 h-20 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <span className="text-4xl">📍</span>
@@ -610,21 +610,21 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* CTA SECTION */}
-        <section className="py-16 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] text-white relative overflow-hidden">
+        <section className="py-20 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-pattern opacity-10"></div>
-          <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-            <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-xl mb-8 text-white/90">Join thousands of patients who trust AROGYAM for their healthcare needs</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 text-center relative z-10">
+            <h2 className="text-5xl font-bold mb-6">Ready to Get Started?</h2>
+            <p className="text-xl mb-12 text-white/90">Join thousands of patients who trust AROGYAM for their healthcare needs</p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <button
                 onClick={() => navigate("/register")}
-                className="px-8 py-4 bg-white text-[#10B981] rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-12 py-5 bg-white text-[#10B981] rounded-xl font-bold text-xl hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Create Free Account
               </button>
               <button
                 onClick={() => navigate("/login")}
-                className="px-8 py-4 bg-transparent text-white border-2 border-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all"
+                className="px-12 py-5 bg-transparent text-white border-2 border-white rounded-xl font-bold text-xl hover:bg-white/10 transition-all"
               >
                 Sign In
               </button>
@@ -633,8 +633,8 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
         </section>
 
         {/* FOOTER */}
-        <footer className="py-12 bg-gray-900 text-white">
-          <div className="max-w-7xl mx-auto px-6">
+        <footer className="py-16 bg-gray-900 text-white">
+          <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               <div>
                 <div className="flex items-center gap-3 mb-4">

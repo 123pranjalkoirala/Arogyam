@@ -1,18 +1,6 @@
-// ========================================
+ 
 // SOAP NOTE MODEL - Professional Medical Documentation
-// ========================================
-// 
 // PURPOSE: Defines structure for SOAP (Subjective, Objective, Assessment, Plan) notes.
-// This model manages clinical documentation with proper medical workflow and
-// digital signature capabilities for legal compliance.
-// 
-// ARCHITECTURE: Uses Mongoose ODM with relationships to User and Appointment
-// models, proper validation, and audit trail capabilities.
-// 
-// AUTHOR: Arogyam Healthcare System Development Team
-// VERSION: 2.0 (Enhanced with comprehensive commenting)
-// LAST UPDATED: 2026
-
 // Mongoose - MongoDB Object Modeling Library
 import mongoose from "mongoose";
 
@@ -38,11 +26,8 @@ const soapNoteSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  
-  // ========================================
   // SOAP COMPONENTS - Standard Medical Documentation Format
-  // ========================================
-  
+ 
   // Subjective - Patient's reported symptoms and complaints
   subjective: {
     type: String,
@@ -70,10 +55,8 @@ const soapNoteSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  
-  // ========================================
   // FOLLOW-UP INFORMATION - Next appointment planning
-  // ========================================
+ 
   
   followUp: {
     // Follow-up Date - When next appointment is scheduled
@@ -88,10 +71,8 @@ const soapNoteSchema = new mongoose.Schema({
       enum: ['in_person', 'telemedicine', 'emergency']
     }
   },
-  
-  // ========================================
   // METADATA - Document status and timestamps
-  // ========================================
+ 
   
   // Document Status - Current state of SOAP note
   status: {
@@ -111,10 +92,7 @@ const soapNoteSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  
-  // ========================================
   // DIGITAL SIGNATURE - Legal compliance and authentication
-  // ========================================
   
   doctorSignature: {
     // Signature Timestamp - When doctor signed the document
@@ -124,20 +102,15 @@ const soapNoteSchema = new mongoose.Schema({
     ipAddress: String
   }
 });
-
-// ========================================
 // MIDDLEWARE - Pre-save hook for timestamp management
-// ========================================
-
 // Update updatedAt field before saving
 soapNoteSchema.pre('save', function(next) {
   this.updatedAt = new Date();
   next();
 });
-
-// ========================================
+ 
 // DATABASE INDEXES - Query optimization
-// ========================================
+ 
 
 // Index for efficient appointment-based queries
 soapNoteSchema.index({ appointmentId: 1 });

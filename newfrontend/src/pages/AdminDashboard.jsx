@@ -317,62 +317,62 @@ export default function AdminDashboard() {
       <Navbar />
       
       <div className="pt-24 pb-12">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="max-w-screen-2xl mx-auto px-8 lg:px-12">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-lg text-gray-600">Manage users, appointments, and system analytics</p>
+          <div className="mb-10">
+            <h1 className="text-5xl font-bold text-gray-900 mb-3">Admin Dashboard</h1>
+            <p className="text-xl text-gray-600">Manage users, appointments, and system analytics</p>
           </div>
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <Users className="w-8 h-8 text-blue-500" />
-                  <TrendingUp className="w-5 h-5 text-green-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+              <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <Users className="w-10 h-10 text-blue-500" />
+                  <TrendingUp className="w-6 h-6 text-green-500" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalPatients || 0}</div>
-                <div className="text-sm text-gray-600 font-medium">Total Patients</div>
+                <div className="text-4xl font-bold text-gray-900 mb-2">{stats.totalPatients || 0}</div>
+                <div className="text-base text-gray-600 font-medium">Total Patients</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <UserCheck className="w-8 h-8 text-[#0F9D76]" />
-                  <TrendingUp className="w-5 h-5 text-green-500" />
+              <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <UserCheck className="w-10 h-10 text-[#0F9D76]" />
+                  <TrendingUp className="w-6 h-6 text-green-500" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalDoctors || 0}</div>
-                <div className="text-sm text-gray-600 font-medium">Total Doctors</div>
+                <div className="text-4xl font-bold text-gray-900 mb-2">{stats.totalDoctors || 0}</div>
+                <div className="text-base text-gray-600 font-medium">Total Doctors</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <Calendar className="w-8 h-8 text-purple-500" />
-                  <Activity className="w-5 h-5 text-blue-500" />
+              <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <Calendar className="w-10 h-10 text-purple-500" />
+                  <Activity className="w-6 h-6 text-blue-500" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalAppointments || 0}</div>
-                <div className="text-sm text-gray-600 font-medium">Total Appointments</div>
+                <div className="text-4xl font-bold text-gray-900 mb-2">{stats.totalAppointments || 0}</div>
+                <div className="text-base text-gray-600 font-medium">Total Appointments</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <Clock className="w-8 h-8 text-yellow-500" />
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+              <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <Clock className="w-10 h-10 text-yellow-500" />
+                  <CheckCircle className="w-6 h-6 text-green-500" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">{stats.pending || 0}</div>
-                <div className="text-sm text-gray-600 font-medium">Pending Appointments</div>
+                <div className="text-4xl font-bold text-gray-900 mb-2">{stats.pending || 0}</div>
+                <div className="text-base text-gray-600 font-medium">Pending Appointments</div>
               </div>
             </div>
           )}
 
           {/* Patient Identification Statistics */}
           {stats && (
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-500" />
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 mb-10">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <Users className="w-6 h-6 text-blue-500" />
                 Patient Identification Analysis
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckSquare className="w-5 h-5 text-green-600" />
@@ -412,45 +412,45 @@ export default function AdminDashboard() {
 
           {/* Appointment Status Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <Clock className="w-6 h-6 text-yellow-500" />
-                  <span className="text-lg font-bold text-gray-900">{stats.pending || 0}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center gap-4 mb-3">
+                  <Clock className="w-8 h-8 text-yellow-500" />
+                  <span className="text-2xl font-bold text-gray-900">{stats.pending || 0}</span>
                 </div>
-                <div className="text-sm text-gray-600">Pending</div>
+                <div className="text-base text-gray-600">Pending</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <span className="text-lg font-bold text-gray-900">{stats.approved || 0}</span>
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center gap-4 mb-3">
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                  <span className="text-2xl font-bold text-gray-900">{stats.approved || 0}</span>
                 </div>
-                <div className="text-sm text-gray-600">Approved</div>
+                <div className="text-base text-gray-600">Approved</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <XCircle className="w-6 h-6 text-red-500" />
-                  <span className="text-lg font-bold text-gray-900">{stats.rejected || 0}</span>
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center gap-4 mb-3">
+                  <XCircle className="w-8 h-8 text-red-500" />
+                  <span className="text-2xl font-bold text-gray-900">{stats.rejected || 0}</span>
                 </div>
-                <div className="text-sm text-gray-600">Rejected</div>
+                <div className="text-base text-gray-600">Rejected</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <Activity className="w-6 h-6 text-blue-500" />
-                  <span className="text-lg font-bold text-gray-900">
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center gap-4 mb-3">
+                  <Activity className="w-8 h-8 text-blue-500" />
+                  <span className="text-2xl font-bold text-gray-900">
                     {stats.totalAppointments - (stats.pending + stats.approved + stats.rejected) || 0}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600">Completed</div>
+                <div className="text-base text-gray-600">Completed</div>
               </div>
             </div>
           )}
 
           {/* Tabs */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="flex border-b border-gray-200 bg-gray-50">
               {[
                 { id: "overview", label: "Overview", icon: BarChart3 },
@@ -460,35 +460,35 @@ export default function AdminDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-4 px-6 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-5 px-8 text-base font-semibold transition-all flex items-center justify-center gap-3 ${
                     activeTab === tab.id
                       ? "text-[#0F9D76] border-b-2 border-[#0F9D76] bg-white"
                       : "text-gray-600 hover:text-[#0F9D76] hover:bg-gray-100"
                   }`}
                 >
-                  <tab.icon className="w-4 h-4" />
+                  <tab.icon className="w-5 h-5" />
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            <div className="p-6">
+            <div className="p-8">
               {/* OVERVIEW TAB */}
               {activeTab === "overview" && stats && (
                 <div className="space-y-8">
                   {/* Enhanced Stats Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                       <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                          <Users className="w-10 h-10" />
+                        <div className="flex items-center justify-between mb-6">
+                          <Users className="w-12 h-12" />
                           <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
-                            <span className="text-xs font-semibold">+12%</span>
+                            <span className="text-sm font-semibold">+12%</span>
                           </div>
                         </div>
-                        <div className="text-4xl font-bold mb-2">{(stats.totalPatients || 0) + (stats.totalDoctors || 0)}</div>
-                        <div className="text-blue-100 font-medium">Total Users</div>
+                        <div className="text-5xl font-bold mb-3">{(stats.totalPatients || 0) + (stats.totalDoctors || 0)}</div>
+                        <div className="text-blue-100 font-medium text-lg">Total Users</div>
                         <div className="mt-3 pt-3 border-t border-blue-400 border-opacity-30">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
@@ -498,17 +498,17 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-8 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                       <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                          <UserCheck className="w-10 h-10" />
+                        <div className="flex items-center justify-between mb-6">
+                          <UserCheck className="w-12 h-12" />
                           <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
-                            <span className="text-xs font-semibold">+8%</span>
+                            <span className="text-sm font-semibold">+8%</span>
                           </div>
                         </div>
-                        <div className="text-4xl font-bold mb-2">{stats.totalDoctors || 0}</div>
-                        <div className="text-emerald-100 font-medium">Total Doctors</div>
+                        <div className="text-5xl font-bold mb-3">{stats.totalDoctors || 0}</div>
+                        <div className="text-emerald-100 font-medium text-lg">Total Doctors</div>
                         <div className="mt-3 pt-3 border-t border-emerald-400 border-opacity-30">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
@@ -518,17 +518,17 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="relative bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                       <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                          <Calendar className="w-10 h-10" />
+                        <div className="flex items-center justify-between mb-6">
+                          <Calendar className="w-12 h-12" />
                           <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
-                            <span className="text-xs font-semibold">+25%</span>
+                            <span className="text-sm font-semibold">+25%</span>
                           </div>
                         </div>
-                        <div className="text-4xl font-bold mb-2">{stats.totalAppointments || 0}</div>
-                        <div className="text-purple-100 font-medium">Total Appointments</div>
+                        <div className="text-5xl font-bold mb-3">{stats.totalAppointments || 0}</div>
+                        <div className="text-purple-100 font-medium text-lg">Total Appointments</div>
                         <div className="mt-3 pt-3 border-t border-purple-400 border-opacity-30">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
@@ -538,17 +538,17 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                       <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                          <Clock className="w-10 h-10" />
+                        <div className="flex items-center justify-between mb-6">
+                          <Clock className="w-12 h-12" />
                           <div className="bg-white bg-opacity-20 rounded-full px-3 py-1">
-                            <span className="text-xs font-semibold">Urgent</span>
+                            <span className="text-sm font-semibold">Urgent</span>
                           </div>
                         </div>
-                        <div className="text-4xl font-bold mb-2">{stats.pending || 0}</div>
-                        <div className="text-orange-100 font-medium">Pending Approval</div>
+                        <div className="text-5xl font-bold mb-3">{stats.pending || 0}</div>
+                        <div className="text-orange-100 font-medium text-lg">Pending Approval</div>
                         <div className="mt-3 pt-3 border-t border-orange-400 border-opacity-30">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
@@ -559,13 +559,13 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Enhanced System Overview */}
-                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white shadow-2xl">
-                      <div className="flex items-center justify-between mb-6">
+                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-10 text-white shadow-2xl">
+                      <div className="flex items-center justify-between mb-8">
                         <h3 className="text-2xl font-bold">System Overview</h3>
-                        <div className="bg-green-500 bg-opacity-20 rounded-full p-2">
-                          <Activity className="w-6 h-6 text-green-400" />
+                        <div className="bg-green-500 bg-opacity-20 rounded-full p-3">
+                          <Activity className="w-7 h-7 text-green-400" />
                         </div>
                       </div>
                       <div className="space-y-6">
@@ -611,10 +611,10 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Recent Activity - Unchanged */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <div className="bg-blue-100 rounded-full p-2">
-                          <Activity className="w-6 h-6 text-blue-600" />
+                    <div className="lg:col-span-2 bg-white rounded-2xl p-10 shadow-xl border border-gray-100">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <div className="bg-blue-100 rounded-full p-3">
+                          <Activity className="w-7 h-7 text-blue-600" />
                         </div>
                         Recent Activity
                       </h3>
@@ -642,13 +642,13 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Enhanced Analytics Charts */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Enhanced Appointments by Status */}
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 shadow-xl border border-indigo-100">
-                      <div className="flex items-center justify-between mb-6">
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-10 shadow-xl border border-indigo-100">
+                      <div className="flex items-center justify-between mb-8">
                         <h3 className="text-2xl font-bold text-gray-900">Appointment Status Overview</h3>
-                        <div className="bg-indigo-100 rounded-full p-2">
-                          <PieChart className="w-6 h-6 text-indigo-600" />
+                        <div className="bg-indigo-100 rounded-full p-3">
+                          <PieChart className="w-7 h-7 text-indigo-600" />
                         </div>
                       </div>
                       <ResponsiveContainer width="100%" height={320}>
