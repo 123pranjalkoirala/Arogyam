@@ -6,7 +6,48 @@ import { upload } from "../middleware/upload.js";
 const router = express.Router();
 
 /* ======================
-   DOCTOR UPLOAD REPORT WITH SOAP NOTES
+   DOCTOR CREATE TEXT-BASED PRESCRIPTION
+====================== */
+router.post("/text-prescription", requireAuth, async (req, res) => {
+  try {
+    console.log("=== CREATE TEXT PRESCRIPTION ===");
+    console.log("User:", req.user);
+    console.log("Request body:", req.body);
+    
+    if (req.user.role !== "doctor")
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+
+    const { patientId, appointmentId, prescriptionText, subjective, objective, assessment, plan } = req.body;
+
+    if (!prescriptionText || !patientId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Prescription text and patient ID are required" 
+      });
+    }
+
+    const report = await Report.create({
+      patientId,
+      doctorId: req.user.id,
+      appointmentId,
+      title: "Text Prescription",
+      prescriptionText,
+      subjective,
+      objective,
+      assessment,
+      plan
+    });
+
+    console.log("Text prescription created:", report);
+    res.json({ success: true, report });
+  } catch (err) {
+    console.error("Error creating text prescription:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+/* ======================
+   DOCTOR UPLOAD REPORT WITH SOAP NOTES (Legacy)
 ====================== */
 router.post("/", requireAuth, upload.single("file"), async (req, res) => {
   try {

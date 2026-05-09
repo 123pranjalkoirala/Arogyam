@@ -70,17 +70,84 @@ doctorScheduleSchema.pre("save", function(next) {
 
 // Static method to get available slots for a doctor on a specific date
 doctorScheduleSchema.statics.getAvailableSlots = async function(doctorId, date) {
-  const schedule = await this.findOne({
+  // Normalize the input date to start of day for consistent comparison
+  const targetDate = new Date(date);
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  console.log("=== GET AVAILABLE SLOTS ===");
+  console.log("Doctor ID:", doctorId);
+  console.log("Input Date (raw):", date);
+  console.log("Target Date (parsed):", targetDate);
+  console.log("Start of Day:", startOfDay);
+  console.log("End of Day:", endOfDay);
+
+  // First, let's check ALL schedules for this doctor regardless of date
+  const allDoctorSchedules = await this.find({
     doctorId,
-    date: new Date(date),
     isActive: true
   }).populate("timeSlots.appointmentId");
 
-  if (!schedule) return [];
+  console.log("=== ALL DOCTOR SCHEDULES ===");
+  console.log("Total schedules for doctor:", allDoctorSchedules.length);
+  allDoctorSchedules.forEach(s => {
+    console.log(`Schedule ${s._id}:`, {
+      date: s.date,
+      dateType: typeof s.date,
+      dateObj: new Date(s.date),
+      timeSlots: s.timeSlots.length
+    });
+  });
 
-  return schedule.timeSlots.filter(slot => 
-    slot.status === "available" && slot.isAvailable
-  );
+  // Now filter by date range
+  const schedules = allDoctorSchedules.filter(schedule => {
+    const scheduleDate = new Date(schedule.date);
+    console.log(`Comparing schedule ${schedule._id}:`, {
+      scheduleDate: scheduleDate,
+      startOfDay: startOfDay,
+      endOfDay: endOfDay,
+      inRange: scheduleDate >= startOfDay && scheduleDate <= endOfDay
+    });
+    return scheduleDate >= startOfDay && scheduleDate <= endOfDay;
+  });
+
+  console.log("=== FILTERED SCHEDULES ===");
+  console.log("Schedules in date range:", schedules.length);
+  schedules.forEach(s => {
+    console.log(`Filtered Schedule ${s._id}:`, {
+      date: s.date,
+      timeSlots: s.timeSlots.length
+    });
+  });
+
+  if (!schedules || schedules.length === 0) return [];
+
+  // Aggregate all available slots from all schedules
+  const allAvailableSlots = [];
+  
+  schedules.forEach(schedule => {
+    const availableSlots = schedule.timeSlots.filter(slot => 
+      slot.status === "available" && slot.isAvailable
+    );
+    
+    console.log(`Schedule ${schedule._id} has ${availableSlots.length} available slots`);
+    
+    // Add schedule reference to each slot for debugging
+    availableSlots.forEach(slot => {
+      allAvailableSlots.push({
+        ...slot.toObject(),
+        scheduleId: schedule._id,
+        scheduleDate: schedule.date
+      });
+    });
+  });
+
+  console.log("Total available slots:", allAvailableSlots.length);
+
+  // Sort by start time
+  return allAvailableSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
 };
 
 // Static method to book a time slot

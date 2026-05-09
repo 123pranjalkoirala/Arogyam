@@ -1,35 +1,23 @@
 // PATIENT DASHBOARD - Patient Portal Main Component
- 
-// 
-// PURPOSE: Central dashboard for patients to manage appointments, medical records,
 import React, { useState, useEffect } from "react";
-
-// React Router - Navigation between different pages
-import { useNavigate } from "react-router-dom";
-
-// Lucide Icons - Professional UI icons for healthcare interface
+ 
+import { useNavigate } from "react-router-dom"; 
 import { Calendar, Clock, User, Bell, FileText, Plus, Stethoscope, Star, ChevronRight, Search, Filter, X, CalendarX, RefreshCw } from "lucide-react";
-
-// Toast Notifications - User feedback system
 import toast from "react-hot-toast";
-
-// Application Components - Custom UI components
-import Navbar from "../components/Navbar";           // Main navigation
-import ScrollToTop from "../components/ScrollToTop";     // Scroll behavior
+ 
+import Navbar from "../components/Navbar";            
+import ScrollToTop from "../components/ScrollToTop";      
 
 
 // COMPONENT DEFINITION - Patient Dashboard Main Function
 
 export default function PatientDashboard() {
-  // AUTHENTICATION AND NAVIGATION SETUP
-  
-  // Navigation Hook - For programmatic navigation
+ 
   const navigate = useNavigate();
   
-  // Authentication Data - Retrieved from localStorage
-  const token = localStorage.getItem("token");        // JWT token for API calls
-  const userRole = localStorage.getItem("role");       // User role verification
-  const userName = localStorage.getItem("userName");      // Personalized display
+  const token = localStorage.getItem("token");        
+  const userRole = localStorage.getItem("role");        
+  const userName = localStorage.getItem("userName");      
   
   // Debug Logging - Development and troubleshooting
   console.log("PATIENT DASHBOARD DEBUG");
@@ -37,16 +25,13 @@ export default function PatientDashboard() {
   console.log("User Role:", userRole);
   console.log("User Name:", userName);
   
-  // STATE MANAGEMENT - Component State Variables
-  
-  // Tab Management - Controls which section is visible
-  const [activeTab, setActiveTab] = useState("overview");  // Current active tab
+ 
+  const [activeTab, setActiveTab] = useState("overview");   
   
   // Profile Management - User personal and medical information
-  const [profile, setProfile] = useState(null);              // User profile data
-  const [editingProfile, setEditingProfile] = useState(false);     // Profile edit mode
-  const [editForm, setEditForm] = useState({});           // Profile form data
-  
+  const [profile, setProfile] = useState(null);             
+  const [editingProfile, setEditingProfile] = useState(false);      
+  const [editForm, setEditForm] = useState({});           
   // Appointment Management - Booking and scheduling
   const [appointments, setAppointments] = useState([]);         // User appointments
   const [appointmentFilter, setAppointmentFilter] = useState("all"); // Appointment status filter
@@ -66,8 +51,8 @@ export default function PatientDashboard() {
   const [loadingSlots, setLoadingSlots] = useState(false);     // Loading state for slots
   
   // Medical Records - Health documents and history
-  const [reports, setReports] = useState([]);                 // Medical reports/prescriptions
   const [soapNotes, setSoapNotes] = useState([]);             // Clinical documentation
+  const [prescriptions, setPrescriptions] = useState([]);       // Independent prescriptions
   
   // Notifications - User alerts and updates
   const [notifications, setNotifications] = useState([]);         // User notifications
@@ -109,9 +94,9 @@ export default function PatientDashboard() {
           loadProfile(),
           loadAppointments(),
           loadDoctors(),
-          loadReports(),
           loadNotifications(),
-          loadSOAPNotes()
+          loadSOAPNotes(),
+          loadPrescriptions()
         ]);
         console.log("DATA LOADING COMPLETED");
       } catch (error) {
@@ -213,34 +198,23 @@ export default function PatientDashboard() {
     }
   };
 
-  const loadReports = async () => {
+  
+  const loadPrescriptions = async () => {
     try {
-      console.log("=== LOADING REPORTS ===");
-      const res = await fetch("http://localhost:5000/api/reports", {
+      console.log("=== LOADING PRESCRIPTIONS ===");
+      const res = await fetch("http://localhost:5000/api/prescriptions/patient", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      console.log("Reports response:", data);
+      console.log("Prescriptions response:", data);
       if (data.success) {
-        setReports(data.reports || []);
-        console.log("Reports loaded successfully");
+        setPrescriptions(data.prescriptions || []);
+        console.log("Prescriptions loaded successfully");
       } else {
-        console.error("Failed to load reports:", data.message);
+        console.log("Failed to load prescriptions:", data.message);
       }
     } catch (error) {
-      console.error("Error loading reports:", error);
-    }
-  };
-
-  const loadNotifications = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/notifications", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) setNotifications(data.notifications);
-    } catch (err) {
-      console.error("Error loading notifications:", err);
+      console.error("Error loading prescriptions:", error);
     }
   };
 
@@ -248,7 +222,7 @@ export default function PatientDashboard() {
     try {
       console.log("=== LOADING SOAP NOTES ===");
       const res = await fetch("http://localhost:5000/api/soap/patient", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       console.log("=== SOAP NOTES RESPONSE ===");
@@ -264,6 +238,26 @@ export default function PatientDashboard() {
     }
   };
 
+  const loadNotifications = async () => {
+    try {
+      console.log("=== LOADING NOTIFICATIONS ===");
+      const res = await fetch("http://localhost:5000/api/notifications", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      console.log("Notifications response:", data);
+      if (data.success) {
+        setNotifications(data.notifications || []);
+        console.log("Notifications loaded successfully");
+      } else {
+        console.log("Failed to load notifications:", data.message);
+      }
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    }
+  };
+
+  
   const fetchAvailableSlots = async (doctorId, date) => {
     if (!doctorId || !date) {
       setAvailableSlots([]);
@@ -272,22 +266,47 @@ export default function PatientDashboard() {
 
     setLoadingSlots(true);
     try {
-      console.log("=== FETCHING AVAILABLE SLOTS ===");
+      console.log("=== FRONTEND FETCHING AVAILABLE SLOTS ===");
       console.log("Doctor ID:", doctorId);
-      console.log("Date:", date);
+      console.log("Date (raw):", date);
+      console.log("Date (type):", typeof date);
+      console.log("Date (parsed):", new Date(date));
+      console.log("Date (toISOString):", new Date(date).toISOString());
+      console.log("Date (toDateString):", new Date(date).toDateString());
 
-      const res = await fetch(`http://localhost:5000/api/doctor-schedule/available/${doctorId}/${date}`);
+      const timestamp = new Date().getTime();
+      const res = await fetch(`http://localhost:5000/api/doctor-schedule/available/${doctorId}/${date}?t=${timestamp}`);
       
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       
       const data = await res.json();
-      console.log("Available slots response:", data);
+      console.log("=== FRONTEND RESPONSE ===");
+      console.log("Full response:", data);
+      console.log("Success:", data.success);
+      console.log("Available slots array:", data.availableSlots);
+      console.log("Available slots count:", data.availableSlots?.length || 0);
       
       if (data.success) {
-        setAvailableSlots(data.availableSlots || []);
-        console.log("Available slots loaded:", data.availableSlots?.length || 0);
+        const slots = data.availableSlots || [];
+        console.log("=== SETTING AVAILABLE SLOTS ===");
+        console.log("Slots to set:", slots);
+        console.log("Slots count:", slots.length);
+        
+        // Log each slot individually
+        slots.forEach((slot, index) => {
+          console.log(`Slot ${index + 1}:`, {
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            scheduleId: slot.scheduleId,
+            status: slot.status,
+            isAvailable: slot.isAvailable
+          });
+        });
+        
+        setAvailableSlots(slots);
+        console.log("Available slots loaded:", slots.length);
       } else {
         console.error("Failed to load available slots:", data.message);
         setAvailableSlots([]);
@@ -584,7 +603,7 @@ export default function PatientDashboard() {
                     { id: "overview", label: "Overview", icon: <Calendar className="w-6 h-6" /> },
                     { id: "appointments", label: "My Appointments", icon: <Clock className="w-6 h-6" /> },
                     { id: "book", label: "Book Appointment", icon: <Plus className="w-6 h-6" /> },
-                    { id: "reports", label: "Medical Reports", icon: <FileText className="w-6 h-6" /> },
+                    { id: "prescriptions", label: "Prescriptions", icon: <FileText className="w-6 h-6" /> },
                     { id: "soap-notes", label: "SOAP Notes", icon: <FileText className="w-6 h-6" /> },
                     { id: "profile", label: "Profile", icon: <User className="w-6 h-6" /> },
                     { id: "notifications", label: "Notifications", icon: <Bell className="w-6 h-6" /> },
@@ -620,8 +639,8 @@ export default function PatientDashboard() {
                       </p>
                     </div>
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl">
-                      <p className="text-gray-700 text-xl mb-4">Total Reports</p>
-                      <p className="text-5xl font-bold text-blue-600">{reports.length}</p>
+                      <p className="text-gray-700 text-xl mb-4">Total Prescriptions</p>
+                      <p className="text-5xl font-bold text-blue-600">{prescriptions.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-8 rounded-2xl">
                       <p className="text-gray-700 text-xl mb-4">Notifications</p>
@@ -882,8 +901,8 @@ export default function PatientDashboard() {
                               required
                             >
                               <option value="">Select a time slot</option>
-                              {availableSlots.map((slot, index) => (
-                                <option key={index} value={slot.startTime}>
+                              {availableSlots.map((slot) => (
+                                <option key={`${slot.scheduleId}-${slot.startTime}`} value={slot.startTime}>
                                   {slot.startTime} - {slot.endTime}
                                 </option>
                               ))}
@@ -923,54 +942,147 @@ export default function PatientDashboard() {
                 </div>
               )}
 
-              {/* Medical Reports */}
-              {activeTab === "reports" && (
+              
+              {/* Prescriptions */}
+              {activeTab === "prescriptions" && (
                 <div className="bg-white rounded-2xl shadow-xl p-10">
-                  <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-4xl font-bold">Medical Reports</h2>
-                    <div className="flex gap-3">
+                  <h2 className="text-4xl font-bold mb-10">My Prescriptions</h2>
+                  
+                  {prescriptions.length === 0 ? (
+                    <div className="text-center py-16">
+                      <h3 className="text-2xl font-semibold text-gray-700 mb-3">No Prescriptions Yet</h3>
+                      <p className="text-gray-500 text-lg mb-6">Your prescriptions will appear here after consultations with doctors</p>
                       <button
                         onClick={() => setActiveTab("appointments")}
-                        className="px-6 py-3 bg-[#1E88E5] text-white text-lg font-medium rounded-xl hover:bg-[#1976D2] flex items-center gap-2"
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
                       >
-                        View Appointments
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("soap-notes")}
-                        className="px-6 py-3 bg-purple-600 text-white text-lg font-medium rounded-xl hover:bg-purple-700 flex items-center gap-2"
-                      >
-                        View SOAP Notes
+                        Book Appointment
                       </button>
                     </div>
-                  </div>
-                  {reports.length === 0 ? (
-                    <p className="text-center text-gray-500 text-xl py-16">No medical reports available yet</p>
                   ) : (
                     <div className="space-y-8">
-                      {reports.map((report) => (
-                        <div key={report._id} className="bg-gray-50 p-8 rounded-2xl flex justify-between items-center">
-                          <div>
-                            <p className="font-bold text-2xl">{report.title}</p>
-                            <p className="text-xl text-gray-600 mt-2">Uploaded by Dr. {report.doctorId?.name || "Unknown"}</p>
-                            <p className="text-gray-500 mt-3">
-                              {new Date(report.createdAt).toLocaleDateString("en-GB", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              })}
-                            </p>
+                      {prescriptions.map((prescription) => (
+                        <div key={prescription._id} className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-3xl p-8">
+                          {/* Header */}
+                          <div className="flex justify-between items-start mb-6">
+                            <div>
+                              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                Prescription from Dr. {prescription.doctorId?.name || "Unknown"}
+                              </h3>
+                              <p className="text-lg text-gray-600 mb-1">
+                                {prescription.doctorId?.specialization || "General Practice"}
+                              </p>
+                              <p className="text-gray-500">
+                                {new Date(prescription.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                Active
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                {new Date(prescription.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          
-                          <a
-                            href={report.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-8 py-5 bg-[#43A047] text-white text-xl font-bold rounded-2xl hover:bg-[#388E3C] inline-flex items-center gap-2"
-                            download
-                          >
-                            <FileText className="w-5 h-5" />
-                            View & Download Report
-                          </a>
+
+                          {/* Prescription Details */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Patient Information */}
+                            <div className="bg-white rounded-2xl p-6 shadow-sm">
+                              <h4 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <span className="text-sm">👤</span>
+                                </div>
+                                Patient Information
+                              </h4>
+                              <div className="space-y-3">
+                                <div>
+                                  <p className="text-sm text-gray-600">Diagnosis</p>
+                                  <p className="font-medium text-gray-900">{prescription.diagnosis}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-600">Symptoms</p>
+                                  <p className="font-medium text-gray-900">{prescription.symptoms}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-600">Allergies</p>
+                                  <p className="font-medium text-gray-900">{prescription.allergies || "None recorded"}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Medications */}
+                            <div className="bg-white rounded-2xl p-6 shadow-sm">
+                              <h4 className="text-lg font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+                                <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+                                  <span className="text-sm">💊</span>
+                                </div>
+                                Medications
+                              </h4>
+                              <div className="space-y-4">
+                                {prescription.medications.map((med, index) => (
+                                  <div key={index} className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-200">
+                                    <h5 className="font-semibold text-indigo-900 mb-3">Medication #{index + 1}</h5>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                      <div>
+                                        <p className="text-gray-600">Medication Name</p>
+                                        <p className="font-medium text-gray-900">{med.name}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-600">Dosage</p>
+                                        <p className="font-medium text-gray-900">{med.dosage}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-600">Frequency</p>
+                                        <p className="font-medium text-gray-900">{med.frequency}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-600">Duration</p>
+                                        <p className="font-medium text-gray-900">{med.duration}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-600">Quantity</p>
+                                        <p className="font-medium text-gray-900">{med.quantity}</p>
+                                      </div>
+                                      {med.instructions && (
+                                        <div className="col-span-2">
+                                          <p className="text-gray-600">Special Instructions</p>
+                                          <p className="font-medium text-gray-900">{med.instructions}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Additional Information */}
+                          {(prescription.refills || prescription.notes) && (
+                            <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm">
+                              <h4 className="text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2">
+                                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                                  <span className="text-sm">📝</span>
+                                </div>
+                                Additional Information
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {prescription.refills && (
+                                  <div>
+                                    <p className="text-sm text-gray-600">Refills</p>
+                                    <p className="font-medium text-gray-900">{prescription.refills}</p>
+                                  </div>
+                                )}
+                                {prescription.notes && (
+                                  <div>
+                                    <p className="text-sm text-gray-600">Additional Notes</p>
+                                    <p className="font-medium text-gray-900">{prescription.notes}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

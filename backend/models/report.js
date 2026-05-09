@@ -22,6 +22,9 @@ const reportSchema = new mongoose.Schema({
   // File URL - Path to uploaded document
   fileUrl: String,
 
+  // Text-based Prescription - Doctor's written prescription
+  prescriptionText: String,
+
   // SOAP-like Medical Information - Clinical documentation
   subjective: String,   // Patient symptoms/complaints
   objective: String,   // Doctor observations/findings

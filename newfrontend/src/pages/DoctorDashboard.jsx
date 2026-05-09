@@ -82,9 +82,9 @@ export default function DoctorDashboard() {
   // Purpose: Controls visibility of SOAP note creation modal
   const [showSOAPModal, setShowSOAPModal] = useState(false);        
   
-  // Prescription Upload Modal State
-  // Purpose: Controls visibility of prescription upload modal
-  const [showReportModal, setShowReportModal] = useState(false);      
+  // Prescription Modal State
+  // Purpose: Controls visibility of prescription creation modal
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);      
   // MEDICAL DATA STATES - Patient Medical Information
   // These states manage medical and patient-related data
   const [soapData, setSoapData] = useState({
@@ -94,9 +94,23 @@ export default function DoctorDashboard() {
     plan: "",               // Treatment plan, medications, and recommendations
     followUp: { date: "", notes: "", type: "in_person" }  // Follow-up appointment details
   });
-  // File Upload State
-  // Purpose: Stores the selected prescription file for upload
-  const [selectedFile, setSelectedFile] = useState(null);    
+
+  // PRESCRIPTION STATES - Independent prescription management
+  const [prescriptionData, setPrescriptionData] = useState({
+    medications: [{
+      name: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+      instructions: "",
+      quantity: ""
+    }],
+    diagnosis: "",
+    symptoms: "",
+    allergies: "",
+    refills: 0,
+    notes: ""
+  });
   
   // Patient History State
   // Purpose: Stores medical history data for a selected patient
@@ -155,7 +169,8 @@ export default function DoctorDashboard() {
     dates: [""],                   // Array of selected dates for availability (up to 5 dates) - starts with one empty date
     timeSlots: [{ startTime: "", endTime: "" }], // Array of available time slots for each day
     isRecurring: false,          // Whether this schedule repeats (daily/weekly/monthly)
-    recurringPattern: "",         // Pattern for recurring schedules
+    recurringPattern: "weekly",         // Pattern for recurring schedules
+    selectedDays: [],            // Selected days of week for recurring schedules
     overwriteExisting: false     // Whether to overwrite existing schedules
   });
 
@@ -341,6 +356,7 @@ export default function DoctorDashboard() {
         timeSlots: validTimeSlots,
         isRecurring: scheduleForm.isRecurring,
         recurringPattern: scheduleForm.recurringPattern,
+        selectedDays: scheduleForm.selectedDays,
         overwriteExisting: scheduleForm.overwriteExisting
       };
 
@@ -368,7 +384,8 @@ export default function DoctorDashboard() {
           dates: [""],
           timeSlots: [{ startTime: "", endTime: "" }],
           isRecurring: false,
-          recurringPattern: "",
+          recurringPattern: "weekly",
+          selectedDays: [],
           overwriteExisting: false
         });
         fetchSchedules();
@@ -621,112 +638,101 @@ export default function DoctorDashboard() {
     }
   };
 
-  const handleUploadReport = async () => {
-    if (!selectedFile) {
-      toast.error("Please select a file");
+  // Helper functions for prescription management
+  const addMedication = () => {
+    setPrescriptionData({
+      ...prescriptionData,
+      medications: [...prescriptionData.medications, { 
+        name: "", 
+        dosage: "", 
+        frequency: "", 
+        duration: "", 
+        instructions: "", 
+        quantity: "" 
+      }]
+    });
+  };
+
+  const removeMedication = (index) => {
+    const newMedications = prescriptionData.medications.filter((_, i) => i !== index);
+    setPrescriptionData({
+      ...prescriptionData,
+      medications: newMedications
+    });
+  };
+
+  const updateMedication = (index, field, value) => {
+    const newMedications = [...prescriptionData.medications];
+    newMedications[index][field] = value;
+    setPrescriptionData({
+      ...prescriptionData,
+      medications: newMedications
+    });
+  };
+
+  const handleCreatePrescription = async () => {
+    // Validate medications
+    const validMedications = prescriptionData.medications.filter(med => 
+      med.name.trim() && med.dosage.trim() && med.frequency.trim() && med.duration.trim()
+    );
+
+    if (validMedications.length === 0) {
+      toast.error("Please add at least one complete medication");
       return;
     }
 
-    if (!soapData.subjective || !soapData.objective || !soapData.assessment || !soapData.plan) {
-      toast.error("All SOAP fields are required to upload prescription");
+    if (!prescriptionData.diagnosis.trim()) {
+      toast.error("Please enter diagnosis");
       return;
     }
-
-    const form = new FormData();
-    form.append("file", selectedFile);
-    form.append("patientId", selectedAppointment.patientId._id);
-    form.append("appointmentId", selectedAppointment._id);
-    form.append("title", "Prescription with Medical Notes");
-    form.append("subjective", soapData.subjective);
-    form.append("objective", soapData.objective);
-    form.append("assessment", soapData.assessment);
-    form.append("plan", soapData.plan);
 
     try {
-      // First create SOAP note
-      const soapRes = await fetch(`http://localhost:5000/api/soap/`, {
+      const res = await fetch("http://localhost:5000/api/prescriptions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
+          patientId: selectedAppointment.patientId._id,
           appointmentId: selectedAppointment._id,
-          subjective: soapData.subjective,
-          objective: soapData.objective,
-          assessment: soapData.assessment,
-          plan: soapData.plan,
-          vitalSigns: soapData.vitalSigns,
-          medications: soapData.medications,
-          followUp: soapData.followUp
+          medications: validMedications,
+          diagnosis: prescriptionData.diagnosis,
+          symptoms: prescriptionData.symptoms,
+          allergies: prescriptionData.allergies,
+          refills: prescriptionData.refills,
+          notes: prescriptionData.notes
         })
-      });
-
-      const soapDataResult = await soapRes.json();
-      if (!soapDataResult.success) {
-        toast.error(soapDataResult.message || "Failed to save SOAP note");
-        return;
-      }
-
-      // Then upload prescription
-      const res = await fetch("http://localhost:5000/api/reports", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: form
       });
 
       const data = await res.json();
       if (data.success) {
-        toast.success("Prescription with SOAP notes uploaded successfully");
-        setShowReportModal(false);
-        setSelectedFile(null);
-        setSelectedAppointment(null);
-        setSoapData({
-          subjective: "",
-          objective: "",
-          assessment: "",
-          plan: "",
-          vitalSigns: {
-            bloodPressure: { systolic: "", diastolic: "" },
-            heartRate: "",
-            temperature: "",
-            respiratoryRate: "",
-            oxygenSaturation: "",
-            weight: "",
-            height: ""
-          },
-          medications: [{ name: "", dosage: "", frequency: "", duration: "", instructions: "" }],
-          followUp: { date: "", notes: "", type: "in_person" }
+        toast.success("Prescription created successfully");
+        setShowPrescriptionModal(false);
+        setPrescriptionData({
+          medications: [{
+            name: "",
+            dosage: "",
+            frequency: "",
+            duration: "",
+            instructions: "",
+            quantity: ""
+          }],
+          diagnosis: "",
+          symptoms: "",
+          allergies: "",
+          refills: 0,
+          notes: ""
         });
+        setSelectedAppointment(null);
         fetchAppointments();
       } else {
-        toast.error(data.message || "Failed to upload prescription");
+        toast.error(data.message || "Failed to create prescription");
       }
     } catch (err) {
-      toast.error("Failed to upload prescription");
+      toast.error("Failed to create prescription");
     }
   };
-
-  const addMedication = () => {
-    setSoapData({
-      ...soapData,
-      medications: [...soapData.medications, { name: "", dosage: "", frequency: "", duration: "", instructions: "" }]
-    });
-  };
-
-  const removeMedication = (index) => {
-    setSoapData({
-      ...soapData,
-      medications: soapData.medications.filter((_, i) => i !== index)
-    });
-  };
-
-  const updateMedication = (index, field, value) => {
-    const updatedMedications = [...soapData.medications];
-    updatedMedications[index][field] = value;
-    setSoapData({ ...soapData, medications: updatedMedications });
-  };
-
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -881,11 +887,11 @@ export default function DoctorDashboard() {
                                     <button
                                       onClick={() => {
                                         setSelectedAppointment(a);
-                                        setShowReportModal(true);
+                                        setShowPrescriptionModal(true);
                                       }}
                                       className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-all"
                                     >
-                                      Upload Prescription
+                                      Write Prescription
                                     </button>
                                     <button
                                       onClick={() => {
@@ -1408,52 +1414,211 @@ export default function DoctorDashboard() {
         </div>
       )}
 
-      {/* Prescription Upload Modal */}
-      {showReportModal && selectedAppointment && (
+      {/* Prescription Creation Modal */}
+      {showPrescriptionModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-t-3xl">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Upload Prescription</h2>
-                <button onClick={() => setShowReportModal(false)}>
-                  <X className="w-6 h-6 text-gray-500 hover:text-gray-700" />
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-lg">📋</span>
+                  </div>
+                  Medical Prescription
+                </h2>
+                <button onClick={() => setShowPrescriptionModal(false)}>
+                  <X className="w-6 h-6 text-white hover:bg-white/20 rounded-full p-1" />
                 </button>
               </div>
-              <div className="mt-2 text-sm text-gray-600">
-                Patient: <strong>{selectedAppointment.patientId?.name}</strong>
+              <div className="mt-2 text-sm text-blue-100">
+                Patient: <strong className="text-white">{selectedAppointment.patientId?.name}</strong> | 
+                Date: <strong className="text-white">{selectedAppointment.date}</strong> at <strong className="text-white">{selectedAppointment.time}</strong>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* File Upload Only */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Prescription File
-                </label>
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG
-                </p>
+              {/* Patient Information */}
+              <div className="bg-white rounded-xl p-4 border border-blue-200">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm">👤</span>
+                  </div>
+                  Patient Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-700 mb-2">Diagnosis</label>
+                    <textarea
+                      value={prescriptionData.diagnosis}
+                      onChange={(e) => setPrescriptionData({...prescriptionData, diagnosis: e.target.value})}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none bg-blue-50"
+                      placeholder="Primary diagnosis..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-700 mb-2">Symptoms</label>
+                    <textarea
+                      value={prescriptionData.symptoms}
+                      onChange={(e) => setPrescriptionData({...prescriptionData, symptoms: e.target.value})}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none bg-blue-50"
+                      placeholder="Patient symptoms..."
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-blue-700 mb-2">Allergies</label>
+                  <input
+                    type="text"
+                    value={prescriptionData.allergies}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, allergies: e.target.value})}
+                    className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none bg-blue-50"
+                    placeholder="Known allergies..."
+                  />
+                </div>
+              </div>
+
+              {/* Medications Section */}
+              <div className="bg-white rounded-xl p-4 border border-indigo-200">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-indigo-900 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm">💊</span>
+                    </div>
+                    Medications
+                  </h3>
+                  <button
+                    onClick={addMedication}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Medication
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {prescriptionData.medications.map((med, index) => (
+                    <div key={index} className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-200">
+                      <div className="flex justify-between items-start mb-3">
+                        <h4 className="font-semibold text-indigo-900">Medication #{index + 1}</h4>
+                        {prescriptionData.medications.length > 1 && (
+                          <button
+                            onClick={() => removeMedication(index)}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-indigo-700 mb-1">Medication Name</label>
+                          <input
+                            type="text"
+                            value={med.name}
+                            onChange={(e) => updateMedication(index, 'name', e.target.value)}
+                            className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none bg-white"
+                            placeholder="e.g., Amoxicillin"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-indigo-700 mb-1">Dosage</label>
+                          <input
+                            type="text"
+                            value={med.dosage}
+                            onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
+                            className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none bg-white"
+                            placeholder="e.g., 500mg"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-indigo-700 mb-1">Frequency</label>
+                          <input
+                            type="text"
+                            value={med.frequency}
+                            onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
+                            className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none bg-white"
+                            placeholder="e.g., 3 times daily"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-indigo-700 mb-1">Duration</label>
+                          <input
+                            type="text"
+                            value={med.duration}
+                            onChange={(e) => updateMedication(index, 'duration', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-indigo-700 mb-1">Special Instructions</label>
+                          <textarea
+                            value={med.instructions}
+                            onChange={(e) => updateMedication(index, 'instructions', e.target.value)}
+                            rows={2}
+                            className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none bg-white"
+                            placeholder="Take with food, avoid alcohol..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="bg-white rounded-xl p-4 border border-purple-200">
+                <h3 className="text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm">📝</span>
+                  </div>
+                  Additional Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-2">Refills</label>
+                    <input
+                      type="number"
+                      value={prescriptionData.refills}
+                      onChange={(e) => setPrescriptionData({...prescriptionData, refills: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none bg-purple-50"
+                      placeholder="Number of refills..."
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-2">Additional Notes</label>
+                    <textarea
+                      value={prescriptionData.notes}
+                      onChange={(e) => setPrescriptionData({...prescriptionData, notes: e.target.value})}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none bg-purple-50"
+                      placeholder="Additional prescription notes..."
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-3xl">
+            <div className="sticky bottom-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-b-3xl">
               <div className="flex gap-3">
                 <button
-                  onClick={handleUploadReport}
-                  disabled={!selectedFile}
-                  className="flex-1 py-3 bg-[#1E88E5] text-white rounded-lg font-semibold hover:bg-[#1976D2] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  onClick={handleCreatePrescription}
+                  disabled={prescriptionData.medications.filter(med => med.name.trim() && med.dosage.trim() && med.frequency.trim() && med.duration.trim()).length === 0 || !prescriptionData.diagnosis.trim()}
+                  className="flex-1 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  Upload Prescription
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">📋</span>
+                    </div>
+                    Create Prescription
+                  </div>
                 </button>
                 <button
-                  onClick={() => setShowReportModal(false)}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  onClick={() => setShowPrescriptionModal(false)}
+                  className="px-6 py-3 bg-white/20 text-white rounded-lg font-semibold hover:bg-white/30 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1806,30 +1971,92 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Date Selection - Single Date Focus */}
+              {/* Schedule Type Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Date for Availability
+                  Schedule Type
                 </label>
-                <div className="flex gap-3">
-                  <input
-                    type="date"
-                    value={scheduleForm.dates[0] || ""}
-                    onChange={(e) => updateScheduleDate(0, e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  <button
-                    onClick={clearExistingSchedule}
-                    className="px-4 py-3 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-all"
-                  >
-                    Clear Existing
-                  </button>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="scheduleType"
+                      checked={!scheduleForm.isRecurring}
+                      onChange={() => setScheduleForm({...scheduleForm, isRecurring: false})}
+                      className="mr-2"
+                    />
+                    <span>Single Day</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="scheduleType"
+                      checked={scheduleForm.isRecurring}
+                      onChange={() => setScheduleForm({...scheduleForm, isRecurring: true})}
+                      className="mr-2"
+                    />
+                    <span>Weekly Recurring</span>
+                  </label>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Select a date and add up to 5 different time slots for that day. Use "Clear Existing" to remove any existing schedule for that date.
-                </p>
               </div>
+
+              {/* Date Selection - Single Date Focus */}
+              {!scheduleForm.isRecurring && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Date for Availability
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="date"
+                      value={scheduleForm.dates[0] || ""}
+                      onChange={(e) => updateScheduleDate(0, e.target.value)}
+                      className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0F9D76] focus:border-[#0F9D76] outline-none"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    <button
+                      onClick={clearExistingSchedule}
+                      className="px-4 py-3 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-all"
+                    >
+                      Clear Existing
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select a date and add up to 5 different time slots for that day. Use "Clear Existing" to remove any existing schedule for that date.
+                  </p>
+                </div>
+              )}
+
+              {/* Day Selection for Recurring Schedule */}
+              {scheduleForm.isRecurring && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Days of Week
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                      <label key={day} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={scheduleForm.selectedDays.includes(day)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setScheduleForm({...scheduleForm, selectedDays: [...scheduleForm.selectedDays, day]});
+                            } else {
+                              setScheduleForm({...scheduleForm, selectedDays: scheduleForm.selectedDays.filter(d => d !== day)});
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{day}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select days of the week when you want to be available. Time slots will apply to all selected days.
+                  </p>
+                </div>
+              )}
 
               {/* Time Slots */}
               <div>

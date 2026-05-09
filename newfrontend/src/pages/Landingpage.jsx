@@ -318,7 +318,7 @@ Experts recommend establishing consistent sleep schedules, creating dark cool sl
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="max-w-2xl">
                 <div className="inline-block px-6 py-3 bg-[#0F9D76]/10 text-[#0F9D76] rounded-full mb-8 font-semibold text-lg">
-                  Trusted by 10,000+ Patients
+                  Trusted Platform
                 </div>
                 
                 <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 leading-tight mb-8">

@@ -5,10 +5,9 @@ import { requireAuth } from "../middleware/auth.js";
 import { sendAppointmentNotification } from "../services/emailService.js";
 
 const router = express.Router();
-
-/* =========================
-   ADMIN STATS
-========================= */
+ 
+   //ADMIN STATS
+ 
 router.get("/stats", async (req, res) => {
   try {
     console.log("=== Admin Stats Request ===");

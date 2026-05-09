@@ -81,7 +81,10 @@ const userSchema = new mongoose.Schema(
     
     // Professional Biography
  
-    bio: String
+    bio: String,
+    
+    // Doctor Approval Status - Only for doctors
+    isApproved: { type: Boolean, default: false }
   },
   
   // SCHEMA OPTIONS

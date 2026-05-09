@@ -5,6 +5,43 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
+// Helper function to get dates for specific day of week for next N weeks
+function getDatesForDayOfWeek(dayName, weeks = 4) {
+  const dayMap = {
+    'Monday': 1,
+    'Tuesday': 2,
+    'Wednesday': 3,
+    'Thursday': 4,
+    'Friday': 5,
+    'Saturday': 6,
+    'Sunday': 0
+  };
+  
+  const targetDay = dayMap[dayName];
+  if (targetDay === undefined) return [];
+  
+  const dates = [];
+  const today = new Date();
+  
+  for (let week = 0; week < weeks; week++) {
+    const currentDate = new Date(today);
+    currentDate.setDate(today.getDate() + (week * 7));
+    
+    // Find the next occurrence of the target day
+    const currentDay = currentDate.getDay();
+    const daysUntilTarget = (targetDay - currentDay + 7) % 7;
+    
+    currentDate.setDate(currentDate.getDate() + daysUntilTarget);
+    
+    // Set time to start of day
+    currentDate.setHours(0, 0, 0, 0);
+    
+    dates.push(new Date(currentDate));
+  }
+  
+  return dates;
+}
+
 /* =========================
    CREATE DOCTOR SCHEDULE
 ========================= */
@@ -14,14 +51,64 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    const { date, dates, timeSlots, isRecurring, recurringPattern } = req.body;
+    const { date, dates, timeSlots, isRecurring, recurringPattern, selectedDays } = req.body;
 
     console.log("=== SCHEDULE CREATION REQUEST ===");
     console.log("Request body:", req.body);
     console.log("dates:", dates);
     console.log("timeSlots:", timeSlots);
+    console.log("isRecurring:", isRecurring);
+    console.log("selectedDays:", selectedDays);
 
-    // Handle both single date and multiple dates
+    // Handle recurring schedules
+    if (isRecurring && selectedDays && selectedDays.length > 0) {
+      console.log("Creating recurring schedule for days:", selectedDays);
+      
+      // Create schedules for each selected day for the next 4 weeks
+      const createdSchedules = [];
+      const errors = [];
+      
+      for (const day of selectedDays) {
+        try {
+          // Get dates for this day of week for the next 4 weeks
+          const datesForDay = getDatesForDayOfWeek(day, 4);
+          
+          for (const dateForDay of datesForDay) {
+            const schedule = await DoctorSchedule.create({
+              doctorId: req.user.id,
+              date: dateForDay,
+              timeSlots,
+              isRecurring: true,
+              recurringPattern: recurringPattern || "weekly",
+              selectedDays: [day]
+            });
+            
+            createdSchedules.push(schedule);
+            console.log(`Created recurring schedule for ${day} on ${dateForDay}`);
+          }
+        } catch (error) {
+          console.error(`Error creating recurring schedule for ${day}:`, error);
+          errors.push({ day, message: error.message });
+        }
+      }
+      
+      if (createdSchedules.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "No schedules were created",
+          errors 
+        });
+      }
+      
+      return res.json({ 
+        success: true, 
+        message: `${createdSchedules.length} recurring schedule(s) created successfully`,
+        schedules: createdSchedules,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    }
+
+    // Handle single date schedules
     const datesToProcess = dates || (date ? [date] : []);
     
     // Filter out empty date strings
@@ -250,6 +337,10 @@ router.get("/available/:doctorId/:date", async (req, res) => {
   try {
     const { doctorId, date } = req.params;
 
+    console.log("=== BACKEND AVAILABLE SLOTS ROUTE ===");
+    console.log("Doctor ID:", doctorId);
+    console.log("Date:", date);
+
     // Verify doctor exists
     const doctor = await User.findById(doctorId);
     if (!doctor || doctor.role !== "doctor") {
@@ -259,7 +350,13 @@ router.get("/available/:doctorId/:date", async (req, res) => {
       });
     }
 
+    console.log("Doctor found:", doctor.name);
+
     const availableSlots = await DoctorSchedule.getAvailableSlots(doctorId, date);
+
+    console.log("=== BACKEND RESPONSE ===");
+    console.log("Available slots count:", availableSlots.length);
+    console.log("Available slots:", availableSlots);
 
     res.json({ 
       success: true, 
