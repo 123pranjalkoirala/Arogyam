@@ -366,6 +366,15 @@ export default function PatientDashboard() {
     console.log("Request data JSON.stringify:", JSON.stringify(requestData));
 
     try {
+      console.log("=== SENDING BOOKING REQUEST ===");
+      console.log("URL: /api/appointments");
+      console.log("Method: POST");
+      console.log("Headers:", {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      });
+      console.log("Body:", JSON.stringify(requestData));
+
       const createRes = await fetch("/api/appointments", {
         method: "POST",
         headers: {
@@ -375,10 +384,19 @@ export default function PatientDashboard() {
         body: JSON.stringify(requestData),
       });
 
+      console.log("=== BOOKING RESPONSE ===");
+      console.log("Response status:", createRes.status);
+      console.log("Response status text:", createRes.statusText);
+      console.log("Response OK:", createRes.ok);
+
       const createData = await createRes.json();
       console.log("Backend response:", createData);
-      
+      console.log("Success:", createData.success);
+      console.log("Message:", createData.message);
+
       if (!createData.success) {
+        console.error("=== BOOKING FAILED ===");
+        console.error("Error message:", createData.message);
         toast.error(createData.message || "Failed to create appointment");
         return;
       }
@@ -392,7 +410,9 @@ export default function PatientDashboard() {
       setAvailableSlots([]);
       setActiveTab("appointments");
     } catch (err) {
-      console.error("Booking error:", err);
+      console.error("=== BOOKING ERROR ===");
+      console.error("Error:", err);
+      console.error("Error message:", err.message);
       toast.error("Booking failed. Check connection.");
     }
   };
