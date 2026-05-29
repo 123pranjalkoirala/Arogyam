@@ -88,7 +88,7 @@ app.use("/api/doctor-schedule", doctorScheduleRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 
  
-app.use("/uploads", express.static(path.resolve("uploads")));
+// app.use("/uploads", express.static(path.resolve("uploads")));
 
  
 app.use("/api/notifications", notificationsRoutes);
