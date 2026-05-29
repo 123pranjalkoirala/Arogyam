@@ -285,10 +285,9 @@ router.put("/:id/status", requireAuth, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
-/* =========================
-   DOCTOR COMPLETE APPOINTMENT WITH SOAP NOTES
-========================= */
+ 
+  // DOCTOR COMPLETE APPOINTMENT WITH SOAP NOTES
+ 
 router.put("/:id/complete", requireAuth, async (req, res) => {
   try {
     console.log("=== COMPLETE APPOINTMENT WITH SOAP ===");

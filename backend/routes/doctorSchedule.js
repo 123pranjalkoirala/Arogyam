@@ -330,9 +330,8 @@ router.delete("/:scheduleId", requireAuth, async (req, res) => {
   }
 });
 
-/* =========================
-   GET AVAILABLE SLOTS FOR PATIENTS
-========================= */
+
+   //GET AVAILABLE SLOTS FOR PATIENTS
 router.get("/available/:doctorId/:date", async (req, res) => {
   try {
     const { doctorId, date } = req.params;

@@ -116,8 +116,6 @@ export const createSOAPNote = async (req, res) => {
 
     };
 
-    
-
     const soapNote = await SOAPNote.findOneAndUpdate(
 
       { appointmentId },
@@ -127,8 +125,6 @@ export const createSOAPNote = async (req, res) => {
       { upsert: true, new: true, runValidators: true }
 
     );
-
-    
 
     console.log("SOAP note saved:", soapNote._id);
 
@@ -142,7 +138,7 @@ export const createSOAPNote = async (req, res) => {
     try {
       const DoctorSchedule = mongoose.model('DoctorSchedule');
       const appointment = await Appointment.findById(appointmentId);
-      
+    
       console.log("=== APPOINTMENT DETAILS FOR TIME SLOT RELEASE ===");
       console.log("Appointment found:", !!appointment);
       if (appointment) {
