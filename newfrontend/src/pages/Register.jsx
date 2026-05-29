@@ -122,7 +122,7 @@ export default function Register() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0F9D76] outline-none"
-              placeholder="John Doe"
+              placeholder="Pranjal koirala"
               required
             />
           </div>

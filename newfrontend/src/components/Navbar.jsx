@@ -98,14 +98,7 @@ export default function Navbar() {
 
             {role === "patient" && <Notifications />}
 
-            {role === "patient" && (
-              <button
-                onClick={() => navigate("/doctors")}
-                className="bg-[#16A34A] text-white px-4 py-2 rounded-md font-semibold hover:bg-[#15803D] transition-all"
-              >
-                Find Doctors
-              </button>
-            )}
+           
 
             {role === "admin" && (
               <button onClick={() => navigate("/admin")} className="hover:underline text-gray-700">
