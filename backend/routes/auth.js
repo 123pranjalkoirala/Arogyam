@@ -94,28 +94,28 @@ router.put("/me", auth, async (req, res) => {
 });
 
 // Upload profile picture
-router.post("/me/upload-picture", auth, upload.single("picture"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
-    }
+// router.post("/me/upload-picture", auth, upload.single("picture"), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ success: false, message: "No file uploaded" });
+//     }
 
-    const pictureUrl = `/uploads/${req.file.filename}`;
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { picture: pictureUrl },
-      { new: true }
-    ).select("-password");
+//     const pictureUrl = `/uploads/${req.file.filename}`;
+//     const user = await User.findByIdAndUpdate(
+//       req.user.id,
+//       { picture: pictureUrl },
+//       { new: true }
+//     ).select("-password");
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
 
-    return res.json({ success: true, user, message: "Profile picture updated successfully" });
-  } catch (err) {
-    console.error("Upload picture error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
-});
+//     return res.json({ success: true, user, message: "Profile picture updated successfully" });
+//   } catch (err) {
+//     console.error("Upload picture error:", err);
+//     return res.status(500).json({ success: false, message: "Server error" });
+//   }
+// });
 
 export default router;
